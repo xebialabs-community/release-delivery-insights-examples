@@ -1,0 +1,14 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - package: Package in Continuum
+  - version: Version
+
+---
+Http GET:
+  path: /get_package_manifest
+  body:
+    package: ${package}
+    version: ${version}
+
+Print as JSON: ${output}

@@ -1,0 +1,10 @@
+xlreleaseUrl: http://admin:admin@xl-release:5516
+xlreleaseEndpoint:
+  url: http://xl-release:5516
+  username: admin
+  password: admin
+  headers:
+    X-XSRF-TOKEN: '1'
+  cookies:
+    XSRF-TOKEN: '1'
+jenkinsUrl: http://jenkins:8080

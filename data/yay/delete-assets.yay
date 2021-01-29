@@ -1,0 +1,24 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - progression: Progression in Continuum
+  - pipeline: Pipeline in Continuum
+  - project: Project in Continuum
+  - package: Package in Continuum
+
+---
+Http POST:
+- path: /delete_progression
+  body:
+    progression: ${progression}
+- path: /delete_pipeline
+  body:
+    pipeline: ${pipeline}
+- path: /delete_project
+  body:
+    project: ${project}
+- path: /delete_package
+  body:
+    package: ${package}
+
+Print as JSON: ${output}

@@ -1,0 +1,14 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - package: The name of the package in Continuum
+
+---
+Http POST:
+  path: /export_package
+  body:
+    package: ${package}
+
+Print as JSON:
+  package:
+  - ${output.Response}

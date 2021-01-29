@@ -1,0 +1,18 @@
+# Trigger this from Jenkins
+
+Http endpoint: ${continuum_testdrive}
+
+---
+Http POST:
+  path: /initiate_pipeline
+  body:
+    definition: ${pipeline}
+    project: ${project}
+    group: ${branch}
+    # Pipeline specific arguments
+    details:
+      package_name: ${package}
+
+
+Print as JSON: ${output.Response}
+Print: https://demo.v1testdrive.com/flow/pi_detail?id=${output.Response._id}

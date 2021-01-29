@@ -1,0 +1,15 @@
+version: '2.3'
+services:
+
+  continuum-setup:
+    build: .
+    volumes:
+    - ~/.xebialabs/secrets.xlvals:/root/.xebialabs/secrets.xlvals:ro
+    command: /bin/sh -c "
+      ./xlw apply -d -f /data/setup.yaml"
+
+
+networks:
+  default:
+    external:
+      name: release-delivery-insights-examples_default

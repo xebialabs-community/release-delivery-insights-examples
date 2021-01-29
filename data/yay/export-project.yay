@@ -1,0 +1,14 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - project: The name of the project in Continuum
+
+---
+Http POST:
+  path: /export_project
+  body:
+    project: ${project}
+
+Print as JSON:
+  projects:
+  - ${output.Response}

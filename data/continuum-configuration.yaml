@@ -1,0 +1,454 @@
+apiVersion: xl-release/v1
+kind: Templates
+spec:
+- directory: Continuum Integration
+  children:
+
+  - template: Continuum Server Configuration
+
+    phases:
+      - phase: Configuration
+        tasks:
+
+          - name: Create default progression
+            type: continuum.ImportProgression
+            continuumServer: Continuum
+            backup: |-
+              {
+                "description": "",
+                "name": "(a) Default Package Progression",
+                "phases": [
+                  {
+                    "code_complete": "False",
+                    "delivery_category": "Developing",
+                    "description": "",
+                    "name": "Master integration"
+                  },
+                  {
+                    "code_complete": "True",
+                    "delivery_category": "Packaged",
+                    "description": "",
+                    "name": "QA"
+                  },
+                  {
+                    "code_complete": "False",
+                    "delivery_category": "Packaged",
+                    "description": "",
+                    "name": "GA"
+                  }
+                ]
+              }
+
+          - name: Configure Pipeline to create package
+            type: continuum.ImportCatalog
+            continuumServer: Continuum
+            content: |-
+              {
+                "pipelines": [
+                  {
+                    "actions": "",
+                    "category": "General",
+                    "dependencies": [],
+                    "description": "",
+                    "globals": {},
+                    "interactive": "False",
+                    "name": "(a) Create package revision",
+                    "phases": [
+                      {
+                        "name": "",
+                        "stages": [
+                          {
+                            "name": "",
+                            "steps": [
+                              {
+                                "name": "",
+                                "plugin": {
+                                  "args": {
+                                    "description": "",
+                                    "globals_key": "PACKAGE_GLOBALS",
+                                    "package": "[$ package_name $]",
+                                    "result_key": "PACKAGE_INFO",
+                                    "version": "[$ branch $]"
+                                  },
+                                  "label": "Flow - Package - New Revision",
+                                  "method": "new_revision",
+                                  "module": "package",
+                                  "name": "flow"
+                                },
+                                "when": "always"
+                              },
+                              {
+                                "name": "",
+                                "plugin": {
+                                  "args": {
+                                    "full_version": "",
+                                    "new_full_version": "[$ full_version $]",
+                                    "new_version": "[$ version $]",
+                                    "package": "[$ package_name $]",
+                                    "phase": "Master integration",
+                                    "revision": "[$ PACKAGE_INFO[\"revision\"] $]"
+                                  },
+                                  "label": "Flow - Package - Promote Revision",
+                                  "method": "promote",
+                                  "module": "package",
+                                  "name": "flow"
+                                },
+                                "when": "always"
+                              },
+                              {
+                                "name": "",
+                                "plugin": {
+                                  "args": {
+                                    "include": "both",
+                                    "targetkey": "MANIFEST_INFO",
+                                    "verbose": "true"
+                                  },
+                                  "label": "Flow - Manifest - Copy to Workspace",
+                                  "method": "manifest_to_workspace",
+                                  "module": "pipeline",
+                                  "name": "flow"
+                                },
+                                "when": "always"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "pipelineglobals": {},
+                    "summary": [],
+                    "team": "Default"
+                  }
+                ]
+              }
+            overwrite: true
+            import_projects: false
+            import_packages: false
+            import_tasks: false
+            human_readable: true
+
+          - name: OK?
+            type: xlrelease.GateTask
+
+  - template: Continuum Project Configuration
+
+    variables:
+    - type: xlrelease.StringVariable
+      key: projectName
+      label: Project name
+      description: The name of the project in Continuum
+      value: (a) Digital.ai Release
+    - type: xlrelease.StringVariable
+      key: progression
+      label: Progression
+      description: The Progression (list of phases) to use for the Value Stream
+      valueProvider:
+        type: xlrelease.ListOfStringValueProviderConfiguration
+        values:
+          - (a) Default Package Progression
+          - DevOps
+          - Demo
+      value: (a) Default Package Progression
+
+    phases:
+      - phase: Configuration
+        tasks:
+          - name: Configure GitHub
+            type: continuum.ConfigureGithub
+            continuumServer: Continuum
+            githubServer: GitHub xl-release
+            taskFailureHandlerEnabled: true
+            taskRecoverOp: SKIP_TASK
+          - name: Configure JIRA
+            type: continuum.ConfigureJira
+            continuumServer: Continuum
+            jiraServer: Jira Server
+            improve_types:
+              - Story
+            maintain_types:
+              - Bug
+              - Task
+            taskFailureHandlerEnabled: true
+            taskRecoverOp: SKIP_TASK
+          - name: Configure Project
+            type: continuum.ImportCatalog
+            continuumServer: Continuum
+            content: |-
+              {
+                "projects": [
+                  {
+                    "actions": [],
+                    "artifacts": [],
+                    "description": "",
+                    "globals": {},
+                    "mappings": [],
+                    "name": "${projectName}",
+                    "notifications": {
+                      "email": {
+                        "addresses": ""
+                      },
+                      "enable": "False",
+                      "http": {
+                        "data": "",
+                        "url": ""
+                      },
+                      "msteams": {
+                        "msteams_instance": ""
+                      },
+                      "on_failure": [],
+                      "on_start": [],
+                      "on_success": [],
+                      "on_wait": [],
+                      "slack": {
+                        "channel": ""
+                      }
+                    },
+                    "source": {
+                      "directives": [
+                        {
+                          "details": {
+                            "args": {},
+                            "instance_name": "Jira Server",
+                            "on_error": "Continue Processing Directives"
+                          },
+                          "type": "jira_workitem_lookup",
+                          "when": "always"
+                        },
+                        {
+                          "details": {
+                            "definition": "(a) Create package revision",
+                            "evaluate": "\"master\" in branch",
+                            "group": "[$ branch $]",
+                            "includeChanges": "",
+                            "project": "Release Demo"
+                          },
+                          "evaluate": "\"master\" in branch",
+                          "type": "assign_to_pipeline",
+                          "when": "evaluate"
+                        }
+                      ],
+                      "enable_polling": "False",
+                      "group_source": "branch",
+                      "interface": "webhook",
+                      "notify_unmanaged": "False",
+                      "notify_unmanaged_addl": "",
+                      "repo_name": "",
+                      "repo_server": "",
+                      "type": "github",
+                      "webhook_secret": ""
+                    },
+                    "team": "Default",
+                    "type": "Source"
+                  }
+                ]
+              }
+            import_pipelines: false
+            import_packages: false
+            import_tasks: false
+            human_readable: true
+          - name: Configure WebHook in GitHub
+            type: xlrelease.Task
+            description: |-
+              Go to GitHub and configure a webhook on your project to point to:
+
+              `http://demo.v1testdrive.com/api/submit_change?toproject=${projectName}&token=<api-token>`
+          - name: Configure Package for your project
+            type: continuum.ImportCatalog
+            continuumServer: Continuum
+            content: |-
+              {
+                "packages": [
+                  {
+                    "actions": [],
+                    "artifacts": [],
+                    "description": "",
+                    "globals": {},
+                    "name": "${projectName}",
+                    "progression": {
+                      "name": "${progression}",
+                      "phases": [
+                        {
+                          "autopromote": "True",
+                          "delivery_category": "Developing",
+                          "directives": [
+                            {
+                              "category": "None",
+                              "controls": [],
+                              "data_prompts": [],
+                              "defer_until": "",
+                              "description": "",
+                              "details": {
+                                "assignto": [],
+                                "notification_body": "",
+                                "reason_required": "False",
+                                "tags": [],
+                                "text": "Please confirm that the QA build was successful.",
+                                "title": "QA build successful"
+                              },
+                              "estimated_touch_time": "",
+                              "index": "0",
+                              "interactive": "True",
+                              "is_deferred": "False",
+                              "name": "QA build successful",
+                              "type": "manual_activity"
+                            }
+                          ],
+                          "name": "Master integration"
+                        },
+                        {
+                          "autopromote": "True",
+                          "delivery_category": "Packaged",
+                          "directives": [
+                            {
+                              "category": "None",
+                              "controls": [],
+                              "data_prompts": [],
+                              "defer_until": "",
+                              "description": "",
+                              "details": {
+                                "assignto": [],
+                                "notification_body": "",
+                                "reason_required": "False",
+                                "tags": [],
+                                "text": "Please confirm we can start the GA release",
+                                "title": "QA successful - ready for GA"
+                              },
+                              "estimated_touch_time": "",
+                              "index": "0",
+                              "interactive": "True",
+                              "is_deferred": "False",
+                              "name": "QA successful",
+                              "type": "manual_activity"
+                            }
+                          ],
+                          "name": "QA"
+                        },
+                        {
+                          "autopromote": "True",
+                          "delivery_category": "Packaged",
+                          "directives": [
+                            {
+                              "category": "None",
+                              "controls": [],
+                              "data_prompts": [],
+                              "defer_until": "",
+                              "description": "",
+                              "details": {
+                                "assignto": [],
+                                "notification_body": "",
+                                "reason_required": "False",
+                                "tags": [],
+                                "text": "Please confirm that all tasks on the Release for \"Post Release Activities completed\" template have been done.",
+                                "title": "Post Release Activities completed"
+                              },
+                              "estimated_touch_time": "",
+                              "index": "0",
+                              "interactive": "True",
+                              "is_deferred": "False",
+                              "name": "Post Release Activities completed",
+                              "type": "manual_activity"
+                            },
+                            {
+                              "category": "None",
+                              "controls": [],
+                              "data_prompts": [],
+                              "defer_until": "",
+                              "description": "",
+                              "details": {
+                                "definition": "Deliver Package Revision",
+                                "group": "",
+                                "initial_data": {},
+                                "project": ""
+                              },
+                              "estimated_touch_time": "",
+                              "index": "1",
+                              "interactive": "False",
+                              "is_deferred": "False",
+                              "name": "Deliver package revision",
+                              "type": "initiate_pipeline"
+                            }
+                          ],
+                          "name": "GA"
+                        }
+                      ]
+                    },
+                    "team": "Default"
+                  }
+                ]
+              }
+            overwrite: true
+            import_projects: false
+            import_pipelines: false
+            import_tasks: false
+            human_readable: true
+          - name: OK?
+            type: xlrelease.GateTask
+
+  - template: Release sample with Continuum Integration
+    variables:
+      - type: xlrelease.StringVariable
+        key: project
+        label: Project name
+        description: The project this release works on
+        value: (a) Digital.ai Release
+      - type: xlrelease.StringVariable
+        key: package
+        label: Package
+        description: The package being produced
+        value: (a) Digital.ai Release
+      - type: xlrelease.StringVariable
+        key: version
+        label: Version
+        description: Base version of this build
+        value: 10.0.0
+      - type: xlrelease.StringVariable
+        key: buildNumber
+        requiresValue: false
+        showOnReleaseStart: false
+        value: "00"
+    scriptUsername: admin
+    scriptUserPassword: admin
+
+    phases:
+      - phase: Continuum
+        tasks:
+
+        - name: Jenkins Build
+          type: jenkins.Build
+          taskFailureHandlerEnabled: true
+          taskRecoverOp: SKIP_TASK
+          buildNumber: ${buildNumber}
+
+        - name: Create and promote package revision
+          type: continuum.RunAPipeline
+          continuumServer: Continuum
+          definition: (a) Create package revision
+          project: ${project}
+          group: master
+          details:
+            package_name: ${package}
+            version: ${version}
+            full_version: ${version}-b${buildNumber}
+          instance_name: Promote package for ${package} build ${buildNumber}
+
+        - name: Configure package manifest
+          type: continuum.ProvidePackageManifestData
+          continuumServer: Continuum
+          package: (a) Digital.ai Release
+          version: "5.0"
+          revision_from: 62
+          revision_to: 146
+
+        - name: OK?
+          type: xlrelease.GateTask
+
+  - name: Package progression
+    type: continuum.PackageProgressionDashboard
+    owner: admin
+    tiles:
+      - name: Package progression
+        type: continuum.PackageProgressionTile
+        server: Continuum
+        progression: (a) Default Package Progression
+        row: 0
+        col: 0

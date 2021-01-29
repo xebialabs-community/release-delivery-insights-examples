@@ -1,0 +1,26 @@
+apiVersion: xl-release/v1
+kind: Templates
+spec:
+
+- name: Jira Server
+  type: jira.Server
+  url: !value jira_url
+  username: !value jira_user
+  password: !value jira_password
+
+- name: GitHub
+  type: github.Server
+  clientId: !value github_user
+  clientSecret: !value github_token
+
+- name: GitHub xl-release
+  type: git.Repository
+  url: https://github.com/xebialabs/xl-release.git
+  authenticationMethod: PAT
+  username: !value github_user
+  password: !value github_token
+
+- name: Continuum
+  type: continuum.ContinuumServer
+  url: !value continuum_url
+  apiToken: !value continuum_apiToken

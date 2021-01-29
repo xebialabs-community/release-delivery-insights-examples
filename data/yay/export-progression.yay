@@ -1,0 +1,12 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - progression: The name of the progression in Continuum
+
+---
+Http POST:
+  path: /export_progression
+  body:
+    progression: ${progression}
+
+Print as JSON: ${output.Response}

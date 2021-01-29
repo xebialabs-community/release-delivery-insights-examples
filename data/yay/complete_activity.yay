@@ -1,0 +1,22 @@
+# Called when ITP Jenkins build succeeds. Add 'full_version' with the new version, e.g. 10.0.0
+
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - package: Name of the Package to promote to a progression Phase.
+#  - revision: Revision number of a Package to promote, takes precedence over `full_version`.
+  - full_version: Full Version of package to promote, optional alternative selector to `revision`.
+  - phase: Name of the Phase containing the Activity to complete.
+  - activity: Name of the Activity to complete.
+
+---
+Http POST:
+  path: /complete_activity
+  body:
+    package: ${package}
+#    revision: ${revision}
+    full_version: ${full_version}
+    phase: ${phase}
+    activity: ${activity}
+
+Print as JSON: ${output.Response}

@@ -1,0 +1,2368 @@
+----------------------
+- Continuum REST API -
+----------------------
+
+accept_webhook
+----------
+
+Accepts any JSON payload submitted, and runs it through the defined list of Directives.
+
+Required Arguments:
+
+* `handler` - name of a defined 'Webhook Handler' containing directives to apply to this payload.
+
+Returns: Success message if successful, error message on failure.
+
+add_cloud_keypair
+----------
+
+Adds a Key Pair to a Cloud.
+
+Required Arguments: 
+
+* `cloud` - Name or ID of the Cloud to update.
+* `name` - a name for the Key Pair.
+* `private_key` - the private key.
+
+Optional Arguments: 
+
+* `passphrase` - a passphrase for this Key Pair.
+    
+Returns: A list of [Cloud KeyPair Objects](api-response-objects#cloud-keypair).
+
+add_object_tag
+----------
+
+Adds a security Tag to an object.
+
+Required Arguments:
+
+* `tag` - The name of the Tag.
+* `object_id` - The ID of the object.
+* `object_type` - The numeric type of the object.
+
+Returns: Success message successful, error message on failure.
+
+Valid and currently implemented `object_type` values are:
+
+* `User` = 1
+* `Asset` = 2
+* `Task` = 3
+* `Canvas Item` = 50
+
+add_team_user
+----------
+
+Add a User to a Team.
+
+Only a 'Team Administrator' can manage Team membership.  If the credentials used for this API call
+are not a Team Administrator for the specified Team, the call will not succeed.
+
+Required Arguments:
+
+* `team` - Name or ID of the Team to change.
+* `user` - Name or ID of the User to add.
+* 'team_role' - Name of the Role for new user to adopt on new team
+
+associate_commits_to_v1_workitem
+----------
+
+#INTERNAL
+Required Arguments:
+
+* `commit_shas` - a list of all the Changes to associate to a Workitem.
+* `associated_by` - User that made the association in Digital.ai Agility.
+* `workitem_number` - Workitem number from Digital.ai Agility.
+* `instance_url` - Digital.ai Agility instance url.
+
+build_stream
+----------
+
+#INTERNAL
+Gets all pipeline instances that a workitem participated in.
+
+Required Arguments:
+
+* `number` - a Workitem Identifier.
+
+Returns: Related Pipeline Instances.
+
+cancel_pipelineinstance
+----------
+
+Cancel a running Pipeline Instance.
+
+All Pending or Processing statuses will be set to Canceled.
+
+Required Arguments:
+
+* `pi` - The Name or ID of a Pipeline Instance.
+
+Returns: 'true' on success, errors on failure.
+
+cancel_transformer_event
+check_transformer_data_map_name_exists
+complete_activity
+----------
+
+Given a Phase, Package Name, Revision (or Full Version), and Activity Name - will complete that Activity with either 'success' or 'failure'.
+
+Required Arguments:
+
+* `package` - Name of the Package to promote to a progression Phase.
+* `revision` - Revision number of a Package to promote, takes precedence over `full_version`.
+* `full_version` - Full Version of package to promote, optional alternative selector to `revision`.
+* `phase` - Name of the Phase containing the Activity to complete.
+* `activity` - Name of the Activity to complete.
+
+Optional Arguments:
+
+* `notes` - Notes to be attached to the Activity. (May be configured to be required.)
+* `failure` - Mark the Activity as a 'failure'.  (`success` if omitted.)
+* `forcewith` - Force completion by setting all Controls to `pass` or `fail`.
+
+Returns: `success` on success, errors otherwise.
+
+configure_plugin
+----------
+
+Configure a specific Flow Plugin.
+
+Required Arguments:
+
+* `plugin` - JSON object formatted as a valid config for the specified plugin.
+
+> The following keys will be encrypted if provided: `token`, `password`.
+
+Returns: success or error.
+
+configure_plugin_instance
+----------
+
+Add a new instance for a particular plugin type. Note: does not overwrite existing instances.
+
+Required Arguments:
+
+* `plugin` - Plugin type.
+* `name` - Name of new plugin instance.
+
+Optional Arguments:
+* `team` - Team with which to associate this plugin instance. Defaults to All Teams.
+
+Conditional Arguments: The args passed in are dependent on the plugin type
+specified in `plugin` arg. For most types they will be as they appear below,
+some types have other naming conventions such as `api_token` instead of `password`.
+
+* `url` - Server URL.
+* `user` - LoginID for server.
+* `password` - Password for server.
+* `api_token` - API token for plugin instance. This will map to a value of "Token" in the ui and "token" in the database.
+
+Returns: success or error.
+
+configure_plugins
+copy_project
+----------
+
+Copy a Project.
+
+Required Arguments:
+
+* `project` - the id or name of a Project.
+* `newname` - a name for the new Project.
+
+Returns: 'true' on success, errors on failure.
+
+create_account
+----------
+
+Creates a Cloud Account.
+
+Required Arguments:
+ 
+* `name` - a name for the new Account.
+* `provider` - one of the valid cloud providers.
+* `login` - the login id (access key) for this Account.
+* `password` - a password (secret key) for this Account.
+* `default_cloud` - the name of a default Cloud for this Account.
+
+Optional Arguments: 
+
+* `account_number` - an Account number.
+
+Returns: The new [Cloud Account Object](api-response-objects#cloud-account).
+
+create_asset
+----------
+
+Creates an Asset.
+
+Required Arguments:
+
+* name - a name for the new Asset.
+
+Optional Arguments:
+
+* `status` - either 'Active' or 'Inactive'. ('Active' if omitted.)
+* `db_name` - a Database name.
+* `address` - the network address of the Asset.
+* `port` - a service port for the Address.
+* `conn_string` - some Assets make their connections via an explicit connection string.
+* `user` - a User ID to associate with this Asset.
+* `password` - a Password to associate with this Asset.
+* `shared_credential` - the name of a Shared Credential to use.
+
+**Regarding Credentials:**
+
+Credentials are optional on an Asset, however if provided there are rules.
+Explicit details can be associated with *only this Asset*, or a Shared Credential can be specified.
+
+The minimum required to create a LOCAL set of credentials on this Asset are:
+
+* `user` - a User ID for the Credential
+* `password` - a Password for the Credential
+
+To specify a Shared Credential, provide the `shared_credential` argument, which is the name of an existing Credential.
+
+Returns: An [Asset Object](api-response-objects#asset).
+
+create_canvas_item
+----------
+
+Creates a new Canvas item.
+
+Required Arguments:
+
+* `project` - a Canvas Project name.
+* `component` - a Canvas Component name.
+* `name` - a Canvas item name.
+* `resourcedata` - the content of the item.
+
+Optional Arguments:
+
+* `ignoreconflicts` - if 'true' existing items will be overwritten.
+
+Returns: Success or Error message.
+
+create_cloud
+----------
+
+Creates a Cloud.
+
+Required Arguments: 
+
+* `name` - a name for the new Cloud.
+* `provider` - one of the valid cloud providers.
+* `apiurl` - URL of the Cloud API endpoint.
+* `apiprotocol` - Cloud API endpoint protocol.
+
+Optional Arguments:
+ 
+* `default_account` - the name of a default Account for this Cloud.
+
+Returns: The new [Cloud Object](api-response-objects#cloud).
+
+create_credential
+----------
+
+Creates a new Shared Credential.
+
+> Only a 'Developer' can create Credentials.
+
+Required Arguments:
+
+* `name` - The full name of the user.
+* `username` - A login name for the user.
+* `password` - Password for the user. If password is not provided, a random password will be generated.
+
+Optional Arguments:
+
+* `description` - Description of the Credential.
+* `domain` - A domain for the Credential.
+
+Returns: A [Credential Object](api-response-objects#credential).
+
+create_data_map
+----------
+
+Creat data map for assets.
+
+Required Arguments:
+
+* `name` - Name of mapping used to associate.
+* `source` - Source system from which sync has to happen
+* `destinations` - Destination systems to which the sync has to happen
+
+Optional Arguments:
+
+* `description` - Description of mapping.
+* `projects` - List of project mappings across external systems.
+
+Returns: Created ID or error message.
+
+create_package
+----------
+
+Create a Package Definition.
+
+Required Arguments:
+
+* `name` - the name of a Package.
+* `team` - Team to which the Package Definition should belong.
+
+Optional Arguments:
+
+* `description` - a description of the Package Definition.
+* `progression` - a Progression to associate with the Package Definition.
+
+Returns: A [Package Definition Object](api-response-objects#package-definition).
+
+create_pipeline
+----------
+
+Create a Pipeline Definition.
+
+Required Arguments:
+
+* `template` - A JSON document formatted as a CSK Pipeline Definition.
+
+Returns: A [Pipeline Definition Object](api-response-objects#pipeline-definition).
+
+create_progression
+----------
+
+Create a Progression Definition.
+
+Required Arguments:
+
+* `name` - the name of a Progression.
+
+Optional Arguments:
+
+* `description` - a description of the Progression.
+
+Returns: A [Progression Definition Object](api-response-objects#progression-definition).
+
+create_project
+----------
+
+Create a Project.
+
+Required Arguments:
+
+* `name` - Name of the Project.
+* `team` - Team which the Project belongs to.
+
+Returns: A [Project Object](api-response-objects#project).
+
+create_tag
+----------
+
+Creates a new Tag for grouping Users.
+
+Required Arguments:
+
+* `name` - The name of the new Tag.  (AlphaNumeric ONLY. Cannot contain spaces, punctuation or special characters.)
+
+Optional Arguments:
+
+* `description` - Describe the Tag.
+
+Returns: The new [Tag Object](api-response-objects#tag) if successful, error message on failure.
+
+create_task
+----------
+
+Create a new Task.
+
+Required Arguments:
+
+* `name` - a name for the new Task.
+* `team` - Team which the task belongs to.
+
+Optional Arguments:
+
+* `code` - a Task code.
+* `desc` - a Task description.
+
+Returns: A [Task Object](api-response-objects#task).
+
+create_task_from_json
+----------
+
+Create a new Task from a JSON Task backup document.
+
+Required Arguments:
+
+* `json` - A properly formatted JSON representation of a Task.
+
+Returns: A [Task Object](api-response-objects#task).
+
+create_team
+----------
+
+Create a new team
+
+Only an 'Administrator' can create teams.  If the credentials used for this API call
+are not an Administrator, the call will not succeed.
+
+Required Arguments:
+
+* `name` - A name for the new Team.
+
+Optional Arguments:
+
+* `description` - A description of the new Team.
+
+create_transformer_data_map
+create_user
+----------
+
+Creates a new user account.
+
+Only an 'Administrator' can create other users.  If the credentials used for this API call
+are not an Administrator, the call will not succeed.
+
+Required Arguments:
+
+* `user` - A login name for the user.
+* `name` - The full name of the user.
+* `teams` - A list of teams the user belongs to, along with a role for each team. Teams and roles are separated by a
+* a colon. Team/role pairs are separated by commas.
+
+Optional Arguments:
+
+* `password` - Password for the user. If password is not provided, a random password will be generated.
+* `email` - Email address for the user.  Required if 'password' is omitted.
+* `authtype` - 'local' or 'ldap'.  Default is 'local' if omitted.
+* `forcechange` - Require user to change password. Default is 'true' if omitted. (Valid values: 'true' or 'false')
+* `status` - Status of the new account. Default is 'enabled' if omitted. (Valid values: enabled, disabled, locked)
+* `expires` - Expiration date for this account.  Default is 'never expires'. Must be in mm/dd/yyyy format.
+* `groups` - A list of groups the user belongs to. Group names cannot contain spaces. Comma delimited list.
+* `get_token` - If true, will return an automatic login token.  (Valid values: 1, yes, true)
+* `contributors` - A list of contributors the user is mapped to. Contributors cannot contain spaces. Comma delimited list.
+
+Returns: A [User Object](api-response-objects#user).
+
+create_webhook
+----------
+
+Creates a new outbound Webhook configuration.
+
+Required Arguments:
+
+* `name` - The name of the Webhook configuration.
+* `destinationurl` - The URL to which events will be posted.
+
+Returns: Success message if successful, error message on failure.
+
+delete_asset
+----------
+
+Deletes an Asset.
+
+Required Arguments:
+
+* `asset` - Either the Asset ID or Name.
+
+Returns: Nothing if successful, error messages on failure.
+
+delete_cloud_keypair
+----------
+
+Removes a Key Pair from a Cloud.
+
+Required Arguments: 
+
+* `cloud` - Name or ID of the Cloud.
+* `name` - Name of the Key Pair to delete.
+    
+Returns: A list of [Cloud KeyPair Objects](api-response-objects#cloud-keypair).
+
+delete_credential
+----------
+
+Removes a Shared Credential.
+
+Required Arguments:
+
+* `credential` - Name or ID of the Credential to delete.
+
+Returns: Success message if successful, error message on failure.
+
+delete_data_map
+----------
+
+Delete data map.
+
+Required Arguments:
+
+* `mapping_id` - data mapping to delete
+
+Returns: Success or error message.
+
+delete_package
+----------
+
+Delete a Package Definition. Destructive of history, and there is no undo.
+
+Required Arguments:
+
+* `package` - the id or name of a Package.
+
+Optional Arguments:
+
+* `preserve` - If `true`, will delete all data but preserve the actual package definition. Valid values: true|false (default).
+
+Returns: 'true' on success, errors on failure.
+
+delete_pipeline
+----------
+
+Permanently delete a Pipeline Definition.
+
+Required Arguments:
+
+* `pipeline` - the id or name of a Pipeline Definition.
+
+Returns: 'true' on success, errors on failure.
+
+delete_pipelinegroup
+----------
+
+Permanently delete a Pipeline Instance Group.
+
+> NOTE: at the moment, requires the '_id' of the Pipeline Instance Group.
+
+Required Arguments:
+
+* `pg` - The ID of a Pipeline Instance Group.
+
+Returns: 'true' on success, errors on failure.
+
+delete_pipelineinstance
+----------
+
+Permanently delete a Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - The Name or ID of a Pipeline Instance.
+
+Returns: 'true' on success, errors on failure.
+
+delete_plan
+----------
+
+Deletes a specific queued execution Plan.
+
+Required Arguments:
+
+* `plan_id` - The integer ID of the Plan to delete.
+
+Returns: Nothing if successful, error messages on failure.
+
+delete_progression
+----------
+
+Delete a Progression Definition. Destructive of history, and there is no undo.
+
+Required Arguments:
+
+* `progression` - the id or name of a Progression.
+
+Returns: 'true' on success, errors on failure.
+
+delete_project
+----------
+
+Permanently delete a Project.
+
+Required Arguments:
+
+* `project` - the id or name of a Project.
+
+Optional Arguments:
+
+* `preserve` - If `true`, will delete all data but preserve the actual project. Valid values: true|false (default).
+
+Returns: 'true' on success, errors on failure.
+
+delete_registry
+----------
+
+Permanently delete a registry.
+
+Required Arguments:
+
+* `registry` - Name of the Registry document.
+
+Returns: 'true' on success, errors on failure.
+
+delete_schedule
+----------
+
+Deletes a Task Schedule and all queued execution Plans.
+
+Required Arguments:
+
+* `schedule_id` - The UUID of the Schedule to delete.
+
+Returns: Nothing if successful, error messages on failure.
+
+delete_tag
+----------
+
+Deletes a security Tag.
+
+Required Arguments:
+
+* `name` - The name of the Tag.
+
+Returns: Success message if successful, error message on failure.
+
+delete_task
+----------
+
+Deletes all versions of a Task.
+
+Required Arguments:
+
+* `task` - Either the Task ID or Name.
+
+Optional Arguments:
+
+* `force_delete` - Delete the Task, even if there are historical rows and references.  (Valid values: 1, yes, true)
+
+Returns: Nothing if successful, error messages on failure.
+
+delete_transformer_data_map
+delete_user
+----------
+
+Deletes a user account
+Only an 'Administrator' can manage other users.  If the credentials used for this API call
+are not an Administrator, the call will not succeed.
+
+Properties will only be updated if the option is provided.  Omitted properties will not be changed.
+
+NOTE: the "username" of a user cannot be changed.
+
+If a user has 'locked' their account by numerous failed login attempts, the flag is reset
+by setting any property.  It's easiest to just the status to 'enabled'.
+
+Required Arguments:
+
+* `user` - ID or Name of the User to update.
+
+delete_workitems
+----------
+
+#INTERNAL
+Permanently delete a matched set of Workitems.
+
+> NOTE: This is a destructive operation that cannot be undone.  Deleting workitems affects audit history, package and automation manifests, and metrics.
+
+Optional Arguments:
+
+At least one of the following options must be provided.  These are matching criteria for the workitems to delete.
+
+* `origin_project` - The Name or ID of the Project where the workitem originated.
+
+Returns: 'true' on success, errors on failure.
+
+deliver_revision
+----------
+
+Delivers a Package Revision out of a Progression into a Delivered condition.
+
+Required Arguments:
+
+* `package` - Name of the Package.
+* `revision` - Revision number of a Package to deliver, takes precedence over `full_version`.
+* `full_version` - Optional Full Version of package to deliver, optional alternative selector to `revision`.
+
+Returns: `success` on success, errors otherwise.
+
+describe_task_parameters
+----------
+
+Describes the Parameters for a Task.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID, Code or Name.
+
+Optional Arguments:
+
+Returns: A help document describing the Task Parameters.
+
+edit_email_configuration
+export_canvas
+----------
+
+Generates an export JSON document all Canvas items.
+
+This function is capable of exporting items from the "filesystem" repository, which is an administrative feature.
+
+Optional Arguments:
+
+* `project` - filter by a Canvas Project name.
+* `component` - filter by a Canvas Component. (Project is required.)
+* `repository` - specify the repository ('file' or 'db', 'db' if omitted.)
+
+Returns: A JSON document containing Canvas items.
+
+export_catalog
+----------
+
+Export all Project, Pipeline, Package, and Task definitions to a catalog as a JSON document.
+
+Returns: A JSON document containing all Project, Pipeline, Package, and Task definitions.
+
+export_package
+----------
+
+Export a Package Definition as a portable backup JSON document.
+
+Required Arguments:
+
+* `package` - the id or name of a Package.
+
+Returns: A [Package Definition Object](api-response-objects#package-definition).
+
+export_pipeline
+----------
+
+Export a Pipeline Definition as a portable backup JSON document.
+
+Required Arguments:
+
+* `pipeline` - the id or name of a Pipeline Definition.
+
+Returns: A [Pipeline Definition Object](api-response-objects#pipeline-definition).
+
+export_plugins
+export_progression
+----------
+
+Export a Progression Definition as a portable backup JSON document.
+
+Required Arguments:
+
+* `progression` - the id or name of a Progression.
+
+Returns: A [Progression Definition Object](api-response-objects#progression-definition).
+
+export_project
+----------
+
+Gets a Project object for export.  (Will not include the `_id`.)
+
+Required Arguments:
+
+* `project` - the id or name of a Project.
+
+Returns: A [Project Object](api-response-objects#project).
+
+export_task
+----------
+
+Create a backup file for a single Task.
+
+> The behavior of this command is different depending on the `Accept` header.
+
+* If 'application/json' (default), it will return a JSON list of individual Task documents.
+* If 'application/xml' OR 'text/plain', it will return an XML document of Tasks.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID, Code or Name.
+
+Optional Arguments:
+
+* `include_refs`` - If true, will analyze each task and include any referenced Tasks.
+
+Returns: A collection of Task backup objects.
+
+get_account
+----------
+
+Gets a Cloud Account.
+
+Required Arguments:
+
+* `name` - a Cloud Account name or ID.
+
+Returns: A [Cloud Account Object](api-response-objects#cloud-account).
+
+get_asset
+----------
+
+Gets an Asset.
+
+Required Arguments:
+
+* `asset` - an Asset Name or ID.
+
+Returns: An [Asset Object](api-response-objects#asset).
+
+get_cloud
+----------
+
+Gets a Cloud object.
+
+Required Arguments: 
+
+* `name` - a Cloud name or ID.
+
+Returns: A [Cloud Object](api-response-objects#cloud).
+
+get_data_map
+----------
+
+Get list of data mappings.
+
+If no 'mapping_id' is supplied, return all mappings.
+
+Optional Arguments:
+
+* `mapping_id` - data mapping to return
+
+Returns: Result or error message.
+
+get_feature_deliverycategory
+----------
+
+Get the `effective delivery category` for a feature, as determined by the condition of all that features workitems.
+
+Required Arguments:
+
+* `id` - The internal `_id` OR the authoritative `ID` from the origin system OR the `key` (user facing identifier) from the origin system.
+
+Returns: An array of timeline events for the specified workitem.
+
+get_license
+----------
+
+Get the license details.
+
+Required Arguments:
+
+* `license` - The text of a license key provided by Continuum.
+
+Returns: The relevant properties of the current license.
+
+get_log
+----------
+
+Gets the log for a specific service or automation instance.
+
+Required Arguments:
+
+* `process` - the name of the process of the log to retrieve.
+
+Optional Arguments:
+
+* `instance` - If process represents instanced data (such as pipelines or tasks), the `instance` is also required.
+* `lines` - The number of log lines to retrieve.  (An integer, or the word `all`.  100 lines if omitted).
+* `level` - Filter lines to a specific debug logging level _and higher_.  Default is all levels.  (Valid values: 10 (DEBUG), 20 (INFO), 30 (WARNING), 40 (ERROR), 50 (CRITICAL))
+* `concatenate` - Concatenate log lines into a single text value.  Default is 'false' - returning an array of rows - if omitted. (Valid values: 'true' or 'false')
+
+> NOTE: specifying `lines=all` can return a very large amount of data.
+
+Returns: An array of log entries or a text buffer (depending on the `concatenate` option) in the requested format.
+
+get_mappings_for_relationship
+get_next_id
+----------
+
+Get the next integer `id` in a named ID set.
+
+Required Arguments:
+
+* `name` - the name of the ID set
+
+Optional Arguments:
+
+* `reseed` - (integer) If provided, reset the pool to the specified value.  (This is the value that will be returned.)
+* `fallback` - (integer) In the case of any errors, the provided `fallback` number will be returned. `0` if omitted.
+
+Returns: 'true' on success, errors on failure.
+
+get_package
+----------
+
+Returns the definition of the specified Package.
+
+Required Arguments:
+
+* `package` - Name of the Package.
+
+Returns: The Package definition document.
+
+get_package_manifest
+----------
+
+Returns the complete Manifest of a Package Version, given a range of Revisions.
+
+Required Arguments:
+
+* `package` - Name of the Package.
+
+Optional Arguments:
+
+* `version` - Version of the Package.  If omitted, optionally use...
+* `version_of_rev` - (integer) A specific Revision. If provided, discover and use the Version of this specific Revision.
+
+> Note: If both `version` and `version_of_rev` are provided, `version` takes precedence.
+
+* `from` - (integer) A starting (older) Revision.  If omitted, will use the oldest Revision in the specified Version.
+* `to` - (integer) An ending (later) Revision.  If omitted, will use the newest Revision in the specified Version.
+* `verbose` - (`true`/`false`) Return verbose Manifest details.  `false` if omitted.
+
+Returns: The Manifest (Workitems, Changes and Artifacts) contained in the specified Package Revision range.
+
+get_package_revision_manifest
+----------
+
+Returns the complete Manifest of a Package Version, given a range of Revisions.
+
+Required Arguments:
+
+* `package` - Name of the Package.
+* `revision` - A specific Package Revision.
+
+Optional Arguments:
+
+* `verbose` - (`true`/`false`) Return verbose Manifest details.  `false` if omitted.
+
+Returns: The Manifest (Workitems, Changes and Artifacts) of the specified Package Revision.
+
+get_package_revision_phase_doc
+----------
+
+Creates a new Revision of a specified Version of a Package.
+
+Required Arguments:
+
+* `package` - Name of the Package.
+* `revision` - A specific Package Revision.
+
+Returns: Data about the current Revisions relationships in its Progression.
+
+get_package_revision_progression
+----------
+
+Returns the Progression definition for a specific Package Revision.  (Name, Phase names and order, etc.)
+
+Required Arguments:
+
+* `package` - Name of the Package.
+* `revision` - A specific Package Revision.
+
+Returns: The Progression the specified Package Revision subscribes to.
+
+get_pi_artifacts
+----------
+
+Gets the Changes from the Manifest of a Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+
+Returns: A JSON document representing all Changes on the Manifest.
+
+> Note: the response is 'json' - 'text' and 'xml' object_output options are not supported.
+
+get_pi_changes
+----------
+
+Gets the Changes from the Manifest of a Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+
+Returns: A JSON document representing all Changes on the Manifest.
+
+Note: the response is 'json' - 'text' and 'xml' object_output options are not supported.
+
+get_pi_data
+----------
+
+Gets a Pipeline Instance Data object.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+
+Optional Arguments:
+
+* `lookup` - Lookup using an expression that evaluates to a subsection of the document.
+
+Returns: A [Pipeline Instance](api-response-objects#pipeline-instance).
+
+Note: the response is 'json' - 'text' and 'xml' object_output options are not supported.
+
+get_pi_workitems
+----------
+
+Gets the Workitems from the Manifest of a Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+
+Returns: A JSON document representing all Workitems on the Manifest.
+
+Note: the response is 'json' - 'text' and 'xml' object_output options are not supported.
+
+get_pipeline
+----------
+
+Gets a Pipeline Definition object.
+
+Required Arguments:
+
+* `pipeline` - the id or name of a Pipeline Definition.
+
+Returns: A [Pipeline Definition Object](api-response-objects#pipeline-definition).
+
+get_pipelineinstance
+----------
+
+Gets a Pipeline Instance object.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+
+Optional Arguments:
+
+* `include_stages` - include Stage, Step and Plugin data and status.
+
+Returns: A [Pipeline Instance](api-response-objects#pipeline-instance).
+
+get_project
+----------
+
+Gets a Project object.
+
+Required Arguments:
+
+* `project` - the id or name of a Project.
+
+Returns: A [Project Object](api-response-objects#project).
+
+get_project_changes
+----------
+
+Gets all the changes submitted to a Project.
+
+Required Arguments:
+
+* `project` - the id or name of a Project.
+
+Returns: An array of change objects.
+
+get_registry
+----------
+
+Gets a registry document by name.
+
+Required Arguments:
+
+* `name` - Name of the Registry document.
+
+Returns: the entire Registry document on success, 'not found' otherwise.
+
+get_settings
+----------
+
+Lists all the settings of modules.
+
+Optional Arguments:
+
+* `module` - name of the module. If omitted, all module settings are returned.
+
+Returns: A [Settings Object](api-response-objects#settings).
+
+get_submission
+----------
+
+Gets a raw 'Submission' payload using a query.
+
+Required Arguments:
+
+* `query` - Valid MongoDB query to identify the previous payload to resubmit.
+
+> If the query would return multiple submissions, the newest one is matched.
+
+Returns: the Submission document on success, 'not found' otherwise.
+
+get_system_log
+----------
+
+Gets the system log.  If all arguments are omitted, will return the most recent 100 entries.
+
+Optional Arguments:
+
+* `object_id` - An object_id filter to limit the results.
+* `object_type` - An object_type filter to limit the results.
+* `log_type` - A log_type filter. ('Security' or 'Object')
+* `action` - An action filter.
+* `filter` - A filter to limit the results.
+* `from` - a date string to set as the "from" marker. (mm/dd/yyyy format)
+* `to` - a date string to set as the "to" marker. (mm/dd/yyyy format)
+* `records` - a maximum number of results to get.
+
+Returns: A list of [Log Entry Objects](api-response-objects#log-entry).
+
+get_task
+----------
+
+Gets a Task object.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID or Name.
+
+Optional Arguments:
+
+* `include_code` - Whether to include Codeblocks and Steps.  (Only included if 'output_format' is 'json' or 'xml'.  'False' if omitted.)
+
+Returns: A [Task Object](api-response-objects#task).
+
+get_task_instance
+----------
+
+Gets the details of a Task Instance.
+
+Required Arguments:
+* `instance` - The Task Instance identifier.
+
+Returns: A [Task Instance Object](api-response-objects#task-instance).
+
+get_task_instance_status
+----------
+
+Gets just the Status of a Task Instance.
+
+Required Arguments:
+
+* `instance` - The Task Instance identifier.
+
+Returns: The 'Status' from a [Task Instance Object](api-response-objects#task-instance).
+
+get_task_instances
+----------
+
+Gets a list of Task Instances.
+
+Optional Arguments:
+
+* `filter` - A filter to limit the results.
+* `status` - A comma separated list of statuses to filter the results.
+* `from` - a date string to set as the "from" marker. (mm/dd/yyyy format)
+* `to` - a date string to set as the "to" marker. (mm/dd/yyyy format)
+* `records` - a maximum number of results to get.
+
+Returns: A list of [Task Instance Objects](api-response-objects#task-instance).
+
+get_task_log
+----------
+
+Gets the run log for a Task Instance.
+
+Required Arguments:
+
+* `instance` - The Task Instance identifier.
+
+Returns: A [Task Log Object](api-response-objects#task-log).
+
+get_task_parameters
+----------
+
+Gets a Parameters template for a Task.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID, Code or Name.
+
+Optional Arguments:
+
+* `basic` - in JSON mode, if provided, will omit descriptive details.
+
+Returns: An XML template defining the Parameters for a Task.
+
+> This function is not affected by the output_format option.  The Response is always an XML document.
+
+get_task_plans
+----------
+
+Gets a list of the queued execution plans for a Task.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID or Name.
+
+Optional Arguments:
+
+Returns: A list of [Execution Plan Objects](api-response-objects#execution-plan).
+
+get_task_schedules
+----------
+
+Gets a list of Schedule definitions for a Task.
+
+Required Arguments:
+
+* `task` - Value can be either a Task ID or Name.
+
+Optional Arguments:
+
+Returns: A list of [Task Schedule Objects](api-response-objects#task-schedule).
+
+* Text results do not include timing details.
+* JSON results include Schedule definitions suitable for use in the 'schedule_task' function.
+
+get_token
+----------
+
+Gets an authentication token for the API, which is the preferred alternative to 'Basic' authorization.
+
+This function requires Basic authorization to be enabled.
+
+Pass an `Authorization` header of type `Basic` to retrieve your Token.
+
+If a token doesn't exist for the authenticated User, this method will generate a new token.
+
+Returns: An authentication token.
+
+get_transformer_assets
+get_transformer_automap
+get_transformer_data_map
+get_transformer_data_map_all_sync_log
+get_transformer_data_map_sync_log_by_inbound
+get_transformer_data_maps
+get_transformer_datamap_for_edit
+get_transformer_fields
+get_transformer_fields_for_create
+get_transformer_instances
+get_transformer_projects
+get_transformer_system_info_for_edit
+get_transformer_workflow
+get_user_teams
+----------
+
+Get a list of all Teams of which the authenticated API user is a member, and their assigned Role.
+
+Returns: A list of the User's Teams and Roles.
+
+get_workitem
+----------
+
+Get the details of a specific workitem.
+
+Required Arguments:
+
+* `id` - The internal `_id` of the workitem OR the authoritative `ID` from the origin system OR the `key` (user facing identifier) from the origin system.
+
+Returns: A workitem document.
+
+get_workitem_deliverycategory
+----------
+
+Get all the packages a workitem is in, and the `effective delivery category` for the workitem.
+
+Required Arguments:
+
+* `id` - The internal `_id` of the workitem OR the authoritative `ID` from the origin system OR the `key` (user facing identifier) from the origin system.
+
+Returns: An array of timeline events for the specified workitem.
+
+get_workitem_parent
+----------
+
+Get the details of a specific feature.
+
+Required Arguments:
+
+* `id` - The internal `_id` of the feature OR the authoritative `ID` from the origin system OR the `key` (user facing identifier) from the origin system.
+
+Returns: A workitem parent document.
+
+get_workitem_timeline
+----------
+
+Get the timeline of a specific workitem.
+
+Required Arguments:
+
+* `id` - The internal `_id` of the workitem OR the authoritative `ID` from the origin system OR the `key` (user facing identifier) from the origin system.
+
+Returns: An array of timeline events for the specified workitem.
+
+get_worklist
+----------
+
+Gets a list of Pipeline in 'pending' status.
+
+Optional Arguments:
+
+* `filter` - a key:value filter to limit the results.
+
+Returns: A list of pending Pipeline Instances.
+
+healthcheck
+----------
+
+Performs a 'health check' on the sytem.
+
+Returns: true/false if the system is 'healthy' and additional details.
+
+import_backup
+----------
+
+Imports an XML or JSON backup file.
+
+> DEPRECATED: this function is deprecated.  Use `import_task` instead.
+
+Required Arguments:
+
+* `import_text` - An XML or JSON document in the format of a Task backup file.
+
+Returns: A list of items in the backup file, with the success/failure of each import.
+
+import_catalog
+----------
+
+Import all Project, Pipeline, Package, and Task definitions from a catalog as a JSON document.
+
+Optional Arguments:
+
+* `projects` - An array of project JSON objects to import.
+* `pipelines` - An array of pipeline JSON objects to import.
+* `packages` - An array of package JSON objects to import.
+* `tasks` - An array of task JSON objects to import.
+* `overwrite` - Valid values: true|false (default).
+    If 'overwrite' is 'true' and the Definition exists, it will be replaced.
+* `human_readable` -  Valid values: true (default)|false.
+    Whether to provide output as name/messgae or id/(true or false).
+    It might be useful to set this to false if you are importing the catalog as part of some automation.
+* `import_into_team` - Team "name" or id. If specified, the catalog will be imported into the specified team, rather than the teams specified in the input.
+This may be useful if you wish to import items from another team or Continuum instance
+
+Returns: A list of all Project, Pipeline, Package, and Task definitions with the name and status of import or exception.
+
+import_package
+----------
+
+Import a Package Definition from a backup file.
+
+Required Arguments:
+
+* `backup` - A JSON document formatted as a Package Definition backup.
+
+Optional Arguments:
+
+* `overwrite` - Valid values: true|false (default).
+
+> If 'overwrite' is 'true' and the Definition exists, it will be replaced.
+
+Returns: Success or error.
+
+import_pipeline
+----------
+
+Import a Pipeline Definition.
+
+Required Arguments:
+
+* `backup` - A JSON document formatted as a complete Continuum Pipeline Definition backup.
+
+Optional Arguments:
+
+* `overwrite` - Valid values: true|false (default).
+
+    If 'overwrite' is 'true' and the Definition exists, it will be replaced.
+
+Returns: A [Pipeline Definition Object](api-response-objects#pipeline-definition).
+
+import_progression
+----------
+
+Import a Progression Definition from a backup file.
+
+Required Arguments:
+
+* `backup` - A JSON document formatted as a Progression Definition backup.
+
+Optional Arguments:
+
+* `overwrite` - Valid values: true|false (default).
+
+    If 'overwrite' is 'true' and the Progression exists, it will be replaced.
+
+Returns: Success or error.
+
+import_project
+----------
+
+Import a Project.
+
+Required Arguments:
+
+* `backup` - A JSON document formatted as a complete Project backup.
+
+Optional Arguments:
+
+* `overwrite` - Valid values: true|false (default).
+
+    If 'overwrite' is 'true' the Project will be replaced.
+
+Returns: A [Project Object](api-response-objects#project).
+
+import_task
+----------
+
+Imports a Task backup file.
+
+Required Arguments:
+
+* `backup` - A JSON document in the format of a Task backup file.
+
+Optional Arguments:
+
+* `overwrite` - Valid values: true|false (default).
+
+    If 'overwrite' is 'true' the Task(s) will be replaced.
+
+> NOTE: There may be multiple Tasks in a single backup file, as often Tasks have dependencies on other Tasks, so all are included.
+
+Returns: A list of items in the backup file, with the success/failure of each import.
+
+initiate_pipeline
+----------
+
+Attempt to initiate a Pipeline Definition.
+
+Required Arguments:
+
+* `definition` - ID or Name of a Pipeline Definition to initiate.
+* `project` - An identifying name for a Project. (ie: repo name)  Useful if a single pipeline definition supports multiple projects.
+* `group` - Summary name, (ie: branch name) used to group all runs of this definition/project combination. Describes your 'use' of this Pipeline.
+
+Optional Arguments:
+
+* `instance_name` - An explicit name to use for this unique run.  (ie: commit id)
+* `details` - a JSON object with additional properties for the Pipeline Instance, often required by specific plugins.
+
+Returns: A [Pipeline Instance Object](api-response-objects#pipeline-instance).
+
+install_add_on
+----------
+
+Installs an Add-On from the vs-exchange
+
+Required Arguments:
+
+* `name` - Name of the Add-On to install.
+
+Optional Arguments:
+
+* `team` - Team to which to add parts of the Add-On that are scoped to a team. Required if the Add-On contains any such parts.
+
+Returns: `success` on success, errors otherwise.
+
+install_license
+----------
+
+Installs a license file.
+
+Required Arguments:
+
+* `license` - The text of a license key provided by Continuum.
+
+Returns: Success or Error message.
+
+invoke_plugin
+----------
+
+Invoke a Plugin Function.
+
+Required Arguments:
+
+* `plugin` - The name of the Plugin PLUS the Module. (ex: github.main)
+* `method` - The method to invoke. (ex "get_issue")
+
+Optional Arguments:
+
+* `args` - A JSON formatted string of arguments which will be sent to the Plugin Function.
+* `team` - The Team in which to search for the Plugin Instance to use when invoking a Plugin Function that requires an Instance.
+   Defaults to Plugins available to All Teams.
+* `instance_name` - A named Plugin instance in the Continuum configuration.
+    Defaults to the Plugin Instance marked as default either within the specified Team or All Teams.
+* `timeout` - The number of seconds to wait for the Plugin Function to execute before returning a timeout error.
+      Defaults to 60 seconds.
+
+> This API call will block the thread while it waits for the Plugin Function to execute. Therefore, the timeout argument
+  should be kept reasonably small based on the Plugin Function being executed to reduce the amount of time the thread
+  remains blocked.
+> This API cannot invoke Pipeline Step Plugin Functions. Pipeline Step Plugin Functions require the context of a Step
+  to run successfully.
+
+Returns: Response varies depending on the Plugin Function called.
+
+list_add_ons
+----------
+
+Lists all Add-Ons installed in this Continuum instance.
+
+Optional Arguments:
+
+* `include_contents` - If true, lists the names of all parts of each of the Add-Ons. Defaults to false
+
+Returns: A list of Add-On details.
+
+list_assets
+----------
+
+Lists all Assets.
+
+Optional Arguments:
+
+* `filter` - will filter a value match on: (Multiple filter arguments can be provided, delimited by spaces.)
+
+    * Asset Name
+    * Port
+    * Address
+    * DB Name
+    * Status
+    * Credential Username
+
+Returns: A list of [Asset Objects](api-response-objects#asset).
+
+list_canvas_items
+----------
+
+Returns a list of all elements in the Canvas feature.
+
+Optional Arguments:
+
+* `project` - filter by a Canvas Project name.
+* `component` - filter by a Canvas Component. (Project is required.)
+* `repository` - specify the repository ('file' or 'db', 'db' if omitted.)
+
+Returns: A list of all Canvas elements.
+
+list_changes
+----------
+
+Lists all Changes.
+
+Optional Arguments:
+
+* `project` - will limit the results to a specific 'project'.
+* `group` - will limit the results to a specific 'group'.
+* `since` - will only return changes since the provided timestamp.
+* `managed` - will list only the managed changes.
+* `unmanaged` - will list only the unmanaged changes.
+* `limit` - will limit the number of changes.
+
+Returns: A list of [Changes](restapi/api-response-objects.html#Changes){:target="robjs"}.
+
+list_cloud_accounts
+----------
+
+Lists all Cloud Accounts.
+
+Optional Arguments: 
+
+* `filter` - will filter a value match on:  (Multiple filter arguments can be provided, delimited by spaces.)
+
+    * Account Name
+    * Account Number
+    * Provider
+    * Login ID
+    * Default Cloud Name
+
+Returns: A list of [Cloud Account Objects](api-response-objects#cloud-account).
+
+list_cloud_keypairs
+----------
+
+Lists all the Key Pairs defined on a Cloud.
+
+Required Arguments:
+
+* `cloud` - Name or ID of a Cloud.
+
+Returns: A list of [Cloud KeyPair Objects](api-response-objects#cloud-keypair).
+
+list_clouds
+----------
+
+Lists all Clouds.
+
+Optional Arguments: 
+
+* `filter` - will filter a value match on:  (Multiple filter arguments can be provided, delimited by spaces.)
+
+    * Cloud Name
+    * Provider
+    * Default Account Name
+    * API URL
+
+Returns: A list of [Cloud Objects](api-response-objects#cloud).
+
+list_credentials
+----------
+
+Lists all Shared Credentials.
+
+Optional Arguments:
+
+* `filter` - will filter a value match in Credential Name, Username, Domain or Description.  (Multiple filter arguments can be provided, delimited by spaces.)
+
+Returns: A list of [Credential Objects](api-response-objects#credential).
+
+list_packages
+----------
+
+Lists all Package Definitions.
+
+Returns: A list of [Package Definition Objects](api-response-objects#package-definition).
+
+list_pipelinegroups
+----------
+
+Lists all Pipeline Instance Groups (Stories).
+
+Optional Arguments:
+
+* `pipeline` - will limit the results a specific Pipeline Definition.
+* `project` - will limit the results a specific 'project'.
+* `group` - will limit the results to a specific 'group'.
+
+Returns: A list of [Pipeline Instance Group Objects](api-response-objects#pipeline-instance-group).
+
+list_pipelineinstances
+----------
+
+Lists all Pipeline Instances.
+
+Optional Arguments:
+
+* `definition` - will limit the results a specific Pipeline Definition.
+* `project` - will limit the results to a specific 'project'.
+* `group` - will limit the results to a specific 'group'.
+* `since` - Will only return instances since the provided timestamp.
+* `limit` - Limit the number of results.  (0 for all results, 100 if omitted.)
+
+Returns: A list of [Pipeline Instance Objects](api-response-objects#pipeline-instance).
+
+list_pipelines
+----------
+
+Lists all Pipeline Definitions.
+
+Returns: A list of [Pipeline Definition Objects](api-response-objects#pipeline-definition).
+
+list_processes
+----------
+
+Lists all running processes.
+
+Returns: A list of [Process Objects](api-response-objects#process).
+
+list_progressions
+----------
+
+Lists all Progressions.
+
+Returns: A list of [Progression Objects](api-response-objects#progression.
+
+list_projects
+----------
+
+Lists all Projects.
+
+Optional Arguments:
+
+Returns: A list of [Project Objects](api-response-objects#project).
+
+list_registries
+----------
+
+Lists all Registries
+
+Returns: A list of [Registry Objects]
+
+list_tags
+----------
+
+Lists all Tags.
+
+Optional Arguments:
+
+* `filter` - will filter a value match in Tag Name.  (Multiple filter arguments can be provided, delimited by spaces.)
+
+Returns: A list of [Tag Objects](api-response-objects#tag).
+
+list_tasks
+----------
+
+Lists all Tasks..
+
+Optional Arguments:
+
+* `filter` - will filter a value match in Task Name, Code or Description.  (Multiple filter arguments can be provided, delimited by spaces.)
+
+Returns: A list of [Task Objects](api-response-objects#task).
+
+> The Task Objects returned to this function are streamlined - they do not contain all the properties available in the `get_task` endpoint.
+
+list_users
+----------
+
+Lists all registered Users.
+
+Optional Arguments:
+
+* `filter` - will filter a value match on: (Multiple filter arguments can be provided, delimited by spaces.)
+
+    * Full Name
+    * Login ID
+    * Role
+    * Email address
+
+Returns: A list of [User Objects](api-response-objects#user).
+
+metric
+----------
+
+Given a named metric and required context retrieve the value of that metric
+
+    Required Arguments:
+
+    * `type` - The name of the desired metric
+    * `context` - A collection of key value pairs specific to the type provided
+
+    Returns: The value of the the requested metric
+
+new_revision
+----------
+
+Creates a new Revision of a specified Version of a Package.
+
+Required Arguments:
+
+* `package` - Name of the Package to revise.
+* `version` - Version in which to create a new Revision.  (Package Revisions increment _within specific Versions_.)
+
+Optional Arguments:
+
+* `full_version` - Full Version of package to promote, optional alternative selector to `revision`.
+
+> Note: Often, it is desireable that the `full_version` actually contain the number of the newly created Revision.
+A special keyword, `__NEWREVISION`, is recognized in the value provided for `full_version` and will be replaced with the new Revision number.
+
+Returns: A Package Revision document if successful, errors otherwise.
+
+override_control
+----------
+
+Given a Package Revision, a Phase and a Control Name, will override that Control if it exists and is failed.
+
+Required Arguments:
+
+* `package` - Name of the Package to promote to a progression Phase.
+* `revision` - Revision number of a Package to promote, takes precedence over `full_version`.
+* `full_version` - Full Version of package to promote, optional alternative selector to `revision`.
+* `phase` - Name of the Phase containing the Activity of the Control to override.
+* `activity` - Name of the Activity containing the Control to override.
+* `control` - Name of the Control to override.
+* `reason` - Description of the reason for overriding the Control.
+
+Returns: `success` on success, errors otherwise.
+
+post_pi_data
+----------
+
+Post data to the Workspace on a running Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+* `key` - key to set in the Workspace data.
+* `value` - value for the provided key.
+
+All data is posted under a parent key - 'returns', to protect the overall Workspace.
+
+Returns: 'true' on success, errors on failure.
+
+Example using curl using a variable for the pipeline instance id and posting an array of values:
+
+    curl -X POST -H "Content-Type: application/json" -H "Authorization: Token 5752fb9abb288013973fabf4" -d "{\"pi\": \"$PI_ID\", \"key\":\"hello\", \"value\": [\"world2\", \"earth\", \"mars\"]}" "http://continuum-server.example.com:8080/api/post_pi_data"
+
+promote_revision
+----------
+
+Promotes a Package Revision to a particular Phase.
+
+Required Arguments:
+
+* `package` - Name of the Package to promote to a Progression Phase.
+* `revision` - Revision number of a Package to promote, takes precedence over `full_version`.
+* `full_version` - Optional Full Version of package to promote, optional alternative selector to `revision`.
+* `phase` - Name of the Phase to which the specified Package Revision will be promoted.
+
+Optional Arguments:
+
+* `new_version` - If provided, all Revisions being promoted will be updated to the provided `new_version`.  (Will attempt to also update `full_version` if possible.)
+
+Returns: `success` on success, errors otherwise.
+
+register_artifact
+----------
+
+Record a new revision of a specific Artifact.
+
+Required Arguments:
+
+* `project` - Name or ID of the Project where this Artifact is defined.
+* `name` - Name of the Artifact to revise.
+* `branch` - Branch in the repository from which this artifact was built.
+* `location` - Optional URL or path to where this Artifact can be found.
+* `build_data` - Optional JSON object additional data about the build.
+
+Returns: `success` on success, errors otherwise.
+
+remove_object_tag
+----------
+
+Removes a Tag from an object.
+
+Required Arguments:
+
+* `tag` - The name of the Tag.
+* `object_id` - The ID of the object.
+* `object_type` - The numeric type of the object.
+
+Returns: Success message if successful, error message on failure.
+
+remove_team
+----------
+
+Remove an empty Team.
+
+Only a 'System Administrator' can remove a team.  If the credentials used for this API call
+are not a Syetem Administrator, the call will not succeed.
+
+Required Arguments:
+
+* `team` - Name or ID of the Team to change.
+
+remove_team_user
+----------
+
+Remove a User from a Team.
+
+Only a 'Team Administrator' can manage Team membership.  If the credentials used for this API call
+are not a Team Administrator for the specified Team, the call will not succeed.
+
+Required Arguments:
+
+* `team` - Name or ID of the Team to change.
+* `user` - Name or ID of the User to remove.
+
+Optional Arguments:
+
+* `default` - Users must be in at least one Team.  If the removal operation would leave this User Teamless, specify a new default Team Name for the User. Will attempt to use `Default` if omitted.
+
+> NOTE: if a new Default Team is assigned, the User will be given the `User` role in the Default Team
+
+rerun_pipelineinstance
+----------
+
+Rerun an Instance, using the saved 'initial data'.
+
+This creates a new Instance exactly as the provided one was started.
+
+Required Arguments:
+
+* `pi` - The Name or ID of a Pipeline Instance.
+
+Returns: A [Pipeline Instance Object](api-response-objects#pipeline-instance).
+
+reset_password
+----------
+
+Resets the password of the authenticated, or a specified User.
+
+If a user is specified, and the authenticated user is an Administrator,
+this will reset the password of the specified user to the provided value.
+
+If no user is specified, the password of the authenticated user will be changed.
+
+> NOTE: to prevent accidental change of an Administrators password, an extra trap is in place: _the username (or id) MUST be provided, even if the authenticated user is the user being changed._
+
+Required Arguments:
+
+* `password` - the new password -or-
+* `generate` - generate a random password.
+
+Optional Arguments:
+
+* `user` - Either the User ID or Name.
+
+Returns: Success message if successful, error messages on failure.
+
+resubmit_change
+----------
+
+Resubmits a change 'Submission' payload to the specified Project.
+
+Required Arguments:
+
+* `query` - Valid MongoDB query to identify the previous payload to resubmit.
+
+> If the query would return multiple submissions, the newest one is matched.
+
+Returns: 'true' on success, errors on failure.
+
+resubmit_task_instance
+----------
+
+Resubmits an Errored or Cancelled Task Instance.  Resubmit is *only* valid on Errored or Cancelled Task Instances.
+
+Required Arguments:
+
+* `instance` - The Task Instance identifier.
+
+Returns: Returns: Nothing if successful, error messages on failure.
+
+resync_transformer_event
+retry_pipelineinstance
+----------
+
+Attempt to retry a failed Pipeline Instance.  Simply restarts it again at Phase One.
+
+CAUTION: The Workspace data is not cleared or reset.  Depending on the design of the Pipeline,
+this may not succeed, or might produce unexpected results.
+
+Required Arguments:
+
+* `pi` - The Name or ID of a Pipeline Instance.
+
+Returns: A [Pipeline Instance Object](api-response-objects#pipeline-instance).
+
+reversion_packagerevision
+----------
+
+Changes the Version of the specified (and all matching previous) Package Revisions.
+
+Required Arguments:
+
+* `package` - Name of the Package to promote to a Progression Phase.
+* `revision` - Revision number of a Package to promote, takes precedence over `full_version`.
+* `full_version` - Optional Full Version of package to promote, optional alternative selector to `revision`.
+* `new_version` - If provided, all Revisions being promoted will be updated to the provided `new_version`.  (Will attempt to also update `full_version` if possible.)
+
+Returns: `success` on success, errors otherwise.
+
+run_metric
+----------
+
+Runs a specific metric.
+
+Required Arguments:
+
+* `module` - Name of the metrics module that contains the metric function to run
+* `metric` - Name of a function definition in the specified module
+
+Optional Arguments:
+
+* `args` - a JSON object of arguments the target metric may require
+
+Returns: `success` on success, errors otherwise.
+
+run_task
+----------
+
+Runs a Task.
+
+Required Arguments:
+
+* `task` - Either the Task ID or Name.
+
+Optional Arguments:
+
+* `initialdata` - A JSON document defining the intial Runtime Variable environment for this Task.
+* `log_level` - an integer (0-4) where 0 is none, 2 is normal and 4 is verbose.  Default is 2.
+* `parameters` - A JSON or XML document defining parameters for the Task.
+* `options` - a JSON object defining certain options for this Task.  Typically used to provide scope for extensions to the Task Engine.
+* `run_later` - if provided, the Task will be scheduled to run at the specified date/time.  ex. "7/4/1776 15:30"
+* `run_on_worker` - if provided, the Task will be explicitly assigned to the specified worker.  (Use the 'user@host' format to identify the target worker.)"
+
+Returns: A [Task Instance Object](api-response-objects#task-instance).
+
+* If 'output_format' is set to 'text', returns only a Task Instance ID.
+* If 'run_later' was specified, will return a success or error message.
+
+save_email_configuration
+schedule_tasks
+----------
+
+Schedules one or more Tasks.
+
+Required Arguments:
+
+* `tasks` - a JSON document containing a list of Tasks and schedule details.
+
+Schedule definition format:
+
+> All lists are _zero based_ integers.
+
+> The [Task Schedule Object](api-response-objects#task-schedule) response from the `get_task_schedules` command in JSON format
+ can provide schedule definition examples for this command.
+
+    [
+{
+    "Task" : *task name*,
+    "Version" : *optional*,
+    "Months": "*" or [list of months],
+    "DaysOrWeekdays": "Days" = days of the month, "Weekdays" = days of the week (default),
+    "Days": "*" or [list of days],
+    "Hours": "*" or [list of hours],
+    "Minutes": "*" or [list of minutes]
+},
+{
+    ...
+}
+    ]
+
+Returns: Nothing if successful, error messages on failure.
+
+send_message
+----------
+
+Sends a message to a registered user.  Message will be 'From' the authenticated API user.
+
+The 'to' argument accepts both email addresses AND Continuum Users.  Each item in the 'to' list
+will try to look up a Continuum User, and if it doesn't match, will assume the entry is an email address.
+
+Required Arguments:
+
+* `to` - a single or comma-separated list of valid email addresses or Continuum Users.
+* `subject` - a subject line
+* `message` - the message body
+
+Optional Arguments:
+
+* `cc` - a carbon copy list of comma-separated email addresses or Continuum Users.
+* `bcc` - a blind carbon copy list of comma-separated email addresses or Continuum Users.
+
+Returns: Success message if successful, error message on failure.
+
+set_pi_data
+----------
+
+Set Workspace data on a running Pipeline Instance.
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance.
+* `key` - key to set in the Workspace data. (Certain internal keys are restricted and cannot be overridden.)
+* `value` - value for the provided key.
+
+> NOTE: USE WITH CAUTION! This function has the ability to overwrite values anywhere in
+the Workspace.  For safer and more common cases, use 'post_pi_data'.
+
+Returns: 'true' on success, errors on failure.
+
+Example using curl:
+
+    curl http://continuum-server.example.com:8080/api/set_pi_data?token=5752fb9abb288013973fabf4&key=hello&value=world&pi=57acb49a320c7a41bf32958a
+
+set_pi_description
+----------
+
+Set the description of a specific Pipeline Instance
+
+Required Arguments:
+
+* `pi` - the id or name of a Pipeline Instance
+* `description` - Description to set (HTML allowed)
+
+Returns: 'true' on success, errors on failure.
+
+set_pi_global_summary
+----------
+
+Set global summary data on a pipeline instance
+
+Required Arguments:
+
+* `pi` - the id or name of a pipeline instance
+* `key` - key to set in the global summary
+* `value` - value for the provided key
+
+Returns: 'true' on success, errors on failure.
+
+Example using curl:
+
+    curl http://continuum-server.example.com:8080/api/set_pi_data?token=5752fb9abb288013973fabf4&key=hello&value=world&pi=57acb49a320c7a41bf32958a
+
+set_pipelinegroup_number
+----------
+
+Set the autonumber root on Pipeline Instance Group. (Used to issue ascending numbers to Instances in the Group.)
+
+Required Arguments:
+
+* `pg` - The ID of a Pipeline Instance Group.
+* `newnumber` - The new number to set as the autonumber root.
+
+Returns: 'true' on success, errors on failure.
+
+set_registry
+----------
+
+Sets values in a specific Registry document.
+
+Required Arguments:
+
+* `name` - Name of the Registry document.
+
+Optional Arguments:
+
+* `value` - Value to set at specified path, or entire document.  If omitted, target key or document will be cleared.
+* `path` - If specified, will place `value` at this path.  If omitted, will update the entire document.
+* `action` - Valid values: set | unset | addtoset | push | pull | merge
+* `create` - Create named Registry if it doesn't exist? Valid values: true | false
+* `options` - Additional Options. Dependent on the value of "action"
+    * if `action: merge` is specified, the available options are:
+* `overwrite` - Overwrite exisiting keys on conflict? Valid values: true|false (default).
+* `deep` - Perform a shallow or deep merge when merging objects Valid values: true|false (default).
+
+Returns: `success` on success, errors otherwise.
+
+stop_task
+----------
+
+Stops a running Task Instance.
+
+Required Arguments:
+
+* `instance` - The Task Instance identifier.
+
+Returns: Nothing if successful, error messages on failure.
+
+submit_change
+----------
+
+Submits a change payload to the specified Project.
+
+Required Arguments:
+
+* `toproject` - the ID or Name of a Project.
+
+> NOTE: This API is different than most others.  It's expecting a JSON
+document as HTTP POST data.  The required `toproject` argument can either be
+provided inside the POST data, or on the URL querystring.
+
+Returns: 'true' on success, errors on failure.
+
+test_plugin_connection
+----------
+
+Tests connectivity to a Plugin instance defined in the Continuum configuration.
+
+Required Arguments:
+
+One of:
+* `plugin_name` - the name of a Plugin. (ex: v1plugin) This will look up the proper Module.
+* `plugin` - DEPRECATED - the name of the Plugin PLUS the Module. (ex: v1plugin.main)
+
+Optional Arguments:
+
+* `instance` - A named Plugin instance in the Continuum configuration. If not used, the default instance will be tested.
+* `team` - the Team to search for the Plugin Instance. Defaults to plugins available to All Teams.
+
+Returns: A success message or error message
+
+uninstall_add_on
+----------
+
+Uninstalls an Add-On from Continuum
+
+Required Arguments:
+
+* `name` - Name of the Add-On to uninstall.
+
+Returns: `success` on success, errors otherwise.
+
+update_cloud
+----------
+
+Updates a Cloud.
+
+Required Arguments:
+ 
+* `name` - Name or ID of the Cloud to update.
+
+Optional Arguments:
+ 
+* `apiurl` - URL of the Cloud API endpoint.
+* `apiprotocol` - Cloud API endpoint protocol.
+* `default_account` - the name of a default Account for this Cloud.
+
+Returns: The updated [Cloud Object](api-response-objects#cloud).
+
+update_settings
+----------
+
+Updates the settings of a process or module.
+
+NOTE: the update_settings command requires submission of a JSON settings object.
+As a guide for updating settings, first execute this command with the `Accept: application/json`
+header (or output_format=json argument).
+
+For example, to update Messenger settings, first do:
+
+get_settings?module=messenger&output_format=json
+
+...then use the result as a template for update_settings.
+
+Required Arguments:
+
+* `module` - name of the module to apply the settings.
+* `settings` - a list of name:value setting objects.
+
+Returns: Nothing if successful, error messages on failure.
+
+update_transformer_data_map
+update_transformer_data_map_with_new_fields
+update_user
+----------
+
+Updates a user account.
+
+Only an 'Administrator' can manage other users.  If the credentials used for this API call
+are not an Administrator, the call will not succeed.
+
+Properties will only be updated if the option is provided.  Omitted properties will not be changed.
+
+NOTE: the "username" of a user cannot be changed.
+
+If a user has 'locked' their account by numerous failed login attempts, the flag is reset
+by setting any property.  It's easiest to just the status to 'enabled'.
+
+Required Arguments:
+
+* `user` - ID or Name of the User to update.
+
+Optional Arguments:
+
+* `name` - The full name of the user.
+* `role` - The users role.  (Valid values: Administrator, Developer, User)
+* `teams` - A list of teams the user belongs to, along with a role for each team. Teams and roles are separated by a
+* `is_system_administrator` - Whether the user should have system administrator privileges. (Valid values: 'true' or 'false') Default is false.
+* `is_shared_asset_manager` - Whether the user should have shared asset manager privileges. (Valid values: 'true' or 'false') Default is false.
+* `email` - Email address for the user.  Can be cleared with "None".
+* `authtype` - 'local' or 'ldap'.
+* `forcechange` - Require user to change password on next login. (Valid values: 'true' or 'false')
+* `status` - Status of the account. (Valid values: enabled, disabled, locked)
+* `expires` - Expiration date for this account.  Must be in mm/dd/yyyy format. Can be cleared with "None".
+* `groups` - Add to the list of groups the user belongs to. Group names cannot contain spaces. Comma delimited list.
+* `contributors` - Contributors are usernames in source control management systems related to this User
+   (Enter one or more comma-separated Contributor 'aliases').
+* `password` - the new password.
+* - OR -
+* `generate` - generate a random password.
+
+Returns: A [User Object](api-response-objects#user).
+
+v1_workitem_sync
+----------
+
+Accepts telemetry from Digital.ai Agility regarding changes to Workitems.
+
+> NOTE: This API is specifically bound to the format of Digital.ai Agility webhooks.  It's expecting a JSON
+document as HTTP POST data.  See the Digital.ai Agility webhooks documentation for the actual schema.
+
+> This API hands processing off to a jobhandler thread.  Therefore it will always return 'success' in accepting the payload, or an error.
+A 'success'ful API transaction does not mean that Continuum successfully processed the payload - watch the jobhandler log for details.
+
+validate_instance
+----------
+
+Validate a Continuum instance exists and the request is authenticated.
+
+Returns: Success or Error message.
+
+version
+----------
+
+Returns: The Continuum version.
+
+winrm_command
+----------
+
+#INTERNAL
+Test connectivity or issue Windows Remote Management commands on a defined Asset.
+
+Required Arguments:
+
+* asset - Asset ID or Name of an Asset to use for the connection.
+
+**OR**
+
+* server - WinRM Server FQDN or IP address.
+* user - User account.
+* password - User password.
+
+
+Optional Arguments:
+
+* kerberos - Use Kerberos authentication if 'True', basic authentication if omitted.
+* command - The command to execute.  (Will connection test only if omitted.)
+* powershell - (boolean) If True, will execute the command as a PowerShell command.
+
+Returns: The result of the command, or errors.
+
+xlrelease_status
+----------
+
+#INTERNAL
+This endpoint expects a customized response from XL Release.
+
+This payload will be evaluated and mapped (if possible) to the appropriate Continuum context,
+be that a Pipeline Instance, Package Revision, or other asset.
+
+This payload must be an JSON object with the following two root level keys:
+
+* `continuum_context` - All of the Continuum context that was passed to the XL Release when it was triggered.
+* `xlrelease_details` - A document containing all the details of the XL Release - phases, tasks, status indicators, etc.
+
+Example Payload:
+
+```
+{
+    "continuum_context": {
+"project_id": "abc123",
+"pipeline_id": ""zyx890",
+"all the other": "data in the context"
+    },
+    "xlrelease_details": {
+"all the details": "of the release"
+    }
+}
+```
+
+Returns: HTTP Return Code, no data.
+

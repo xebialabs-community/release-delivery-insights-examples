@@ -1,0 +1,9 @@
+Http endpoint: ${continuum_testdrive}
+
+---
+Http POST:
+  path: /delete_project
+  body:
+    project: ${project}
+
+Print as YAML: ${output}

@@ -1,0 +1,6 @@
+Http endpoint: ${githubEndpoint}
+
+---
+Http GET: /repos/xebialabs-community/xlr-github-actions-plugin/hooks
+
+Print as YAML: ${output}

@@ -1,0 +1,9 @@
+version: '2.3'
+services:
+  xl-release:
+    build: docker/xl-release
+    ports:
+    - 5516:5516
+    environment:
+      ADMIN_PASSWORD: admin
+      SERVER_URL: http://xl-release:5516

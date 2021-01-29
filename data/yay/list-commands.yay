@@ -1,0 +1,6 @@
+Http endpoint: ${continuum_testdrive}
+
+---
+Http GET: ""
+
+Print: ${output}

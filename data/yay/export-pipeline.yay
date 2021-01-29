@@ -1,0 +1,14 @@
+Http endpoint: ${continuum_testdrive}
+
+Check Input:
+  - pipeline: The name of the pipeline in Continuum
+
+---
+Http POST:
+  path: /export_pipeline
+  body:
+    pipeline: ${pipeline}
+
+Print as JSON:
+  pipelines:
+  - ${output.Response}

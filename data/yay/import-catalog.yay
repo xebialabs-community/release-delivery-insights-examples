@@ -1,0 +1,9 @@
+Http endpoint: ${continuum_testdrive}
+
+---
+Http POST:
+  path: /import_catalog
+  body:
+    progression: ${progression}
+
+Print as JSON: ${output.Response}
