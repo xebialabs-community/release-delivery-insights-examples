@@ -40,7 +40,7 @@ fi
 XL_BIN="${XL_WRAPPER_HOME}/xl"
 if [ ! -f "${XL_BIN}" ] ; then
   echo "Downloading xl binary to ${XL_BIN}"
-  curl -fLso "${XL_BIN}.$$" "${CLI_BASE_URL}/${CLI_VERSION}/${BINARY_TYPE}/xl"
+  curl -fLso "${XL_BIN}.$$" "${CLI_BASE_URL/$'\r'/}/${CLI_VERSION}/${BINARY_TYPE}/xl"
   chmod +x "${XL_BIN}.$$"
   mv "${XL_BIN}.$$" "${XL_BIN}"
 fi
