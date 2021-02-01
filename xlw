@@ -15,6 +15,9 @@ source "${PROG_DIR}/xl/wrapper/wrapper.conf"
 
 XL_WRAPPER_HOME="${HOME}/.xebialabs/wrapper/${CLI_VERSION}"
 
+# remove part of MSWin end of line (when running script from Windows)
+CLI_BASE_URL=${CLI_BASE_URL/$'\r'/}
+
 # checking OS
 BINARY_TYPE="unknown"
 case "`uname`" in
