@@ -1,6 +1,10 @@
 # release-delivery-insights-examples
 
-This repository contains... TODO
+For the version 10.0 of Digital.ai Release, we've developed a first version of the integration with Continuum. 
+Release is our Release Orchestrator and is heavily focused on workflow – less on the contents of the flow, but more of the process. 
+Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development phase. 
+The idea is to join them together, so Release provides a rich insight in what is flowing through your development Value Stream. This will be marketed as Release with DevOps Insights. 
+Release will be the customer facing product; Continuum will be a headless server in the background. All Continuum functionality that we want to expose goes through Release in principle. 
 
 ## Templates included:
 
@@ -19,6 +23,7 @@ This repository contains... TODO
 
 * Release sample with Continuum Integration
 
+    After a successful build, Release does a callback to Continuum to tell it to bundle the collected commits into a package manifest.
     
 
 ## Prerequisites
@@ -34,7 +39,7 @@ You may need to start the VPN client (Cisco AnyConnect) to be able to download t
 
 ### Continuum
 
-TODO
+A Continuum server
 
 ### Licenses
 
