@@ -1,10 +1,13 @@
 # release-delivery-insights-examples
 
-For the version 10.0 of Digital.ai Release, we've developed a first version of the integration with Continuum. 
-Release is our Release Orchestrator and is heavily focused on workflow – less on the contents of the flow, but more of the process. 
-Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development phase. 
-The idea is to join them together, so Release provides a rich insight in what is flowing through your development Value Stream. This will be marketed as Release with DevOps Insights. 
-Release will be the customer facing product; Continuum will be a headless server in the background. All Continuum functionality that we want to expose goes through Release in principle. 
+* The Digital.ai Release with Delivery Insights brings together Agile and DevOps to help you improve visibility and collaboration across software development and deliveries by seamlessly connecting the data and artifacts at each stage of the release to the related agile stories and features, allowing the whole organization to use a single tool to easily track progress end-to-end.
+* Digital.ai Release version 10.0 supports integration with Continuum 21.0. 
+* Digital.ai Release is our Release orchestrator and is more focused on the workflow – less on the contents of the flow, but more of the process. 
+* Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development Value Stream. 
+* The idea is to bring (integrate) them together, so that Release provides a rich insight in what is flowing through your development Value Stream. This combo of Release and Continuum is being offered as the Release with DevOps Insights solution. 
+* Release will be the customer facing product; Continuum will be a headless server in the background. All Continuum functionality that we want to expose goes through Release in principle.
+
+Here are a few Digital.ai Release templates that are readily available to simplify the process of configuring the Release—Continuum integration. 
 
 ## Templates included:
 
@@ -43,7 +46,7 @@ A Continuum server
 
 ### Licenses
 
-You need to bring your own Release license and copy it to the following place
+You need to bring your own Release license and copy it to the following location
 
 * `docker/xl-release/default-conf/xl-release-license.lic`
 
