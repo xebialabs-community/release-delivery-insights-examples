@@ -2,6 +2,25 @@
 
 This repository contains... TODO
 
+## Templates included:
+
+* Continuum Server Configuration:
+
+    This activity needs to be run only once. It is fine to have it as a one-off release. 
+    The tasks are configured with raw JSON content that is pumped into Continuum using the ‘import’ mechanism.
+
+* Continuum project configuration:
+
+    In the scope of this demo, a project is one GitHub repository, using JIRA as a source control mechanism that produces a single package .
+    Each project needs to be configured separately. 
+    We need to set this up in Continuum so it starts tracking commits, associates them with JIRA work items and is able to produce a package version when a build succeeds. 
+
+    Project setup needs to run once so it also makes sense to model it as a user-run template in Release.
+
+* Release sample with Continuum Integration
+
+    
+
 ## Prerequisites
 
 ### Docker
