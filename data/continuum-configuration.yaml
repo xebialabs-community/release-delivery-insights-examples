@@ -9,7 +9,6 @@ spec:
     phases:
       - phase: Configuration
         tasks:
-
           - name: Create default progression
             type: continuum.ImportProgression
             continuumServer: Continuum
@@ -153,23 +152,6 @@ spec:
     phases:
       - phase: Configuration
         tasks:
-          - name: Configure GitHub
-            type: continuum.ConfigureGithub
-            continuumServer: Continuum
-            githubServer: GitHub xl-release
-            taskFailureHandlerEnabled: true
-            taskRecoverOp: SKIP_TASK
-          - name: Configure JIRA
-            type: continuum.ConfigureJira
-            continuumServer: Continuum
-            jiraServer: Jira Server
-            improve_types:
-              - Story
-            maintain_types:
-              - Bug
-              - Task
-            taskFailureHandlerEnabled: true
-            taskRecoverOp: SKIP_TASK
           - name: Configure Project
             type: continuum.ImportCatalog
             continuumServer: Continuum

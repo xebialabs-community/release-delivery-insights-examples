@@ -2,6 +2,11 @@ apiVersion: xl-release/v1
 kind: Templates
 spec:
 
+- name: Continuum
+  type: continuum.ContinuumServer
+  url: !value continuum_url
+  apiToken: !value continuum_apiToken
+
 - name: Jira Server
   type: jira.Server
   url: !value jira_url
@@ -10,6 +15,7 @@ spec:
 
 - name: GitHub
   type: github.Server
+  baseUrl: https://api.github.com
   clientId: !value github_user
   clientSecret: !value github_token
 
@@ -19,8 +25,3 @@ spec:
   authenticationMethod: PAT
   username: !value github_user
   password: !value github_token
-
-- name: Continuum
-  type: continuum.ContinuumServer
-  url: !value continuum_url
-  apiToken: !value continuum_apiToken
