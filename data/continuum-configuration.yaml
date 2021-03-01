@@ -133,6 +133,11 @@ spec:
 
     variables:
     - type: xlrelease.StringVariable
+      key: jiraServer
+      valueProvider:
+        type: continuum.JiraValueProvider
+        jiraServer: Jira Server
+    - type: xlrelease.StringVariable
       key: projectName
       label: Project name
       description: The name of the project in Continuum
@@ -190,7 +195,7 @@ spec:
                         {
                           "details": {
                             "args": {},
-                            "instance_name": "Jira Server",
+                            "instance_name": "${jiraServer}",
                             "on_error": "Continue Processing Directives"
                           },
                           "type": "jira_workitem_lookup",

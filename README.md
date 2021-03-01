@@ -64,7 +64,6 @@ Create a file `~/.xebialabs/secrets.xlvals`, paste in the following section and 
     jira_user = your_jira_user
     jira_password = your_jira_password
     
-    github_user: your_github_user
     github_token: your_github_token
     
     continuum_url: http://yourcompany.v1testdrive.com

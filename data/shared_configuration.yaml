@@ -15,13 +15,5 @@ spec:
 
 - name: GitHub
   type: github.Server
-  baseUrl: https://api.github.com
-  clientId: !value github_user
-  clientSecret: !value github_token
-
-- name: GitHub xl-release
-  type: git.Repository
-  url: https://github.com/xebialabs/xl-release.git
-  authenticationMethod: PAT
-  username: !value github_user
-  password: !value github_token
+  baseUrl: https://github.com
+  loginOrToken: !value github_token
