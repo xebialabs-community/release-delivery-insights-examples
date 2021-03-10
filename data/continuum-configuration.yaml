@@ -207,7 +207,7 @@ spec:
                             "evaluate": "\"master\" in branch",
                             "group": "[$ branch $]",
                             "includeChanges": "",
-                            "project": "Release Demo"
+                            "project": "${projectName}"
                           },
                           "evaluate": "\"master\" in branch",
                           "type": "assign_to_pipeline",
