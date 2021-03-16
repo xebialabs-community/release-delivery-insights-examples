@@ -15,5 +15,5 @@ spec:
 
 - name: GitHub
   type: github.Server
-  baseUrl: https://github.com
+  baseUrl: https://api.github.com
   loginOrToken: !value github_token
