@@ -1,7 +1,7 @@
 # release-delivery-insights-examples
 
 * The Digital.ai Release with Delivery Insights brings together Agile and DevOps to help you improve visibility and collaboration across software development and deliveries by seamlessly connecting the data and artifacts at each stage of the release to the related agile stories and features, allowing the whole organization to use a single tool to easily track progress end-to-end.
-* Digital.ai Release version 10.0 supports integration with Continuum 21.0. 
+* Digital.ai Release version 10.1 supports integration with Continuum 21.???
 * Digital.ai Release is our Release orchestrator and is more focused on the workflow – less on the contents of the flow, but more of the process. 
 * Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development Value Stream. 
 * The idea is to bring (integrate) them together, so that Release provides a rich insight in what is flowing through your development Value Stream. This combo of Release and Continuum is being offered as the Release with DevOps Insights solution. 
@@ -42,7 +42,7 @@ You may need to start the VPN client (Cisco AnyConnect) to be able to download t
 
 ### Continuum
 
-A Continuum server
+A Continuum server v21.????
 
 ### Licenses
 
@@ -51,6 +51,10 @@ You need to bring your own Release license and copy it to the following location
 * `docker/xl-release/default-conf/xl-release-license.lic`
 
 License files are in `.gitignore` to prevent them from being committed.
+
+### Known limitations
+
+- The Github connection on Release must use `token` instead of combination of username and password.
 
 ## Setup
 ### Configure passwords

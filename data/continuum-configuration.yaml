@@ -429,6 +429,166 @@ spec:
         - name: OK?
           type: xlrelease.GateTask
 
+  - template: Demo march
+    variables:
+      - type: xlrelease.StringVariable
+        key: revision
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: application
+    scriptUsername: admin
+    scriptUserPassword: admin
+    
+    phases:
+    - phase: Prepare CTM
+      tasks:
+      - name: "DELETE ME: Create progression with phases"
+        type: continuum.ImportProgression
+        continuumServer: Continuum
+        backup: |-
+          {
+            "description": "",
+            "name": "(a) Default Package Progression",
+            "phases": [
+              {
+                "code_complete": "False",
+                "delivery_category": "Developing",
+                "description": "",
+                "name": "Master integration"
+              },
+              {
+                "code_complete": "True",
+                "delivery_category": "Packaged",
+                "description": "",
+                "name": "QA"
+              },
+              {
+                "code_complete": "False",
+                "delivery_category": "Packaged",
+                "description": "",
+                "name": "GA"
+              }
+            ]
+          }
+      - name: "DELETE ME: Create pipeline"
+        type: continuum.ImportCatalog
+        continuumServer: Continuum
+        content: |-
+          {
+            "pipelines": [
+              {
+                "actions": "",
+                "category": "General",
+                "dependencies": [],
+                "description": "",
+                "globals": {},
+                "interactive": "False",
+                "name": "(a) Create package revision",
+                "phases": [
+                  {
+                    "name": "",
+                    "stages": [
+                      {
+                        "name": "",
+                        "steps": [
+                          {
+                            "name": "",
+                            "plugin": {
+                              "args": {
+                                "description": "",
+                                "globals_key": "PACKAGE_GLOBALS",
+                                "package": "[$ package_name $]",
+                                "result_key": "PACKAGE_INFO",
+                                "version": "[$ branch $]"
+                              },
+                              "label": "Flow - Package - New Revision",
+                              "method": "new_revision",
+                              "module": "package",
+                              "name": "flow"
+                            },
+                            "when": "always"
+                          },
+                          {
+                            "name": "",
+                            "plugin": {
+                              "args": {
+                                "full_version": "",
+                                "new_full_version": "[$ full_version $]",
+                                "new_version": "[$ version $]",
+                                "package": "[$ package_name $]",
+                                "phase": "Master integration",
+                                "revision": "[$ PACKAGE_INFO[\"revision\"] $]"
+                              },
+                              "label": "Flow - Package - Promote Revision",
+                              "method": "promote",
+                              "module": "package",
+                              "name": "flow"
+                            },
+                            "when": "always"
+                          },
+                          {
+                            "name": "",
+                            "plugin": {
+                              "args": {
+                                "include": "both",
+                                "targetkey": "MANIFEST_INFO",
+                                "verbose": "true"
+                              },
+                              "label": "Flow - Manifest - Copy to Workspace",
+                              "method": "manifest_to_workspace",
+                              "module": "pipeline",
+                              "name": "flow"
+                            },
+                            "when": "always"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "pipelineglobals": {},
+                "summary": [],
+                "team": "Default"
+              }
+            ]
+          }
+        overwrite: true
+        import_projects: false
+        import_packages: false
+        import_tasks: false
+        human_readable: true
+      - name: Create ${application}
+        type: xlrelease.Task
+      - name: Do the commits
+        type: xlrelease.Task
+    - phase: Do the magic phase
+      tasks:
+      - name: Track commits
+        type: continuum.TrackCode
+        continuumServer: Continuum
+        application: ${application}
+        group: master
+        revision: ${revision}
+      - name: Verify work is on Master Integration
+        type: xlrelease.Task
+      - name: Promote to QA
+        type: continuum.PromoteAPackage
+        continuumServer: Continuum
+        package: ${application}
+        phase_name: QA
+        revision: ${revision}
+      - name: Verify work is on QA
+        type: xlrelease.Task
+      - name: Delivery revision
+        type: continuum.DeliverRevision
+        continuumServer: Continuum
+        package: ${application}
+        revision: ${revision}
+      - name: Verify work is gone
+        type: xlrelease.Task
+      color: '#FFAB00'
+
   - name: Package progression
     type: continuum.PackageProgressionDashboard
     owner: admin
