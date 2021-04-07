@@ -567,7 +567,7 @@ spec:
       - name: Track commits
         type: continuum.TrackCode
         continuumServer: Continuum
-        application: ${application}
+        package: ${application}
         group: master
         revision: ${revision}
       - name: Verify work is on Master Integration
