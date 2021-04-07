@@ -1,9 +1,19 @@
 version: '2.3'
 services:
   xl-release:
+    image: release-delivery-insights-dev
     build: docker/xl-release
     ports:
     - 5516:5516
     environment:
       ADMIN_PASSWORD: admin
       SERVER_URL: http://xl-release:5516
+    volumes:
+      - conf:/opt/xebialabs/xl-release-server/conf
+      - repository:/opt/xebialabs/xl-release-server/repository
+      - archive:/opt/xebialabs/xl-release-server/archive
+
+volumes:
+  conf:
+  repository:
+  archive:
