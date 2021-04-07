@@ -5,9 +5,22 @@ services:
     build: .
     volumes:
     - ~/.xebialabs/secrets.xlvals:/root/.xebialabs/secrets.xlvals:ro
+    - conf:/opt/xebialabs/xl-release-server/conf
+    - repository:/opt/xebialabs/xl-release-server/repository
+    - archive:/opt/xebialabs/xl-release-server/archive
     command: /bin/sh -c "
       ./xlw apply -d -f /data/setup.yaml"
 
+volumes:
+  conf:
+    external:
+      name: release-delivery-insights-examples_conf
+  repository:
+    external:
+      name: release-delivery-insights-examples_repository
+  archive:
+    external:
+      name: release-delivery-insights-examples_archive
 
 networks:
   default:
