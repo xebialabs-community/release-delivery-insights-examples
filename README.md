@@ -42,7 +42,7 @@ You may need to start the VPN client (Cisco AnyConnect) to be able to download t
 
 ### Continuum
 
-A Continuum server v21.????
+A Continuum server v21.???? with `Delivery Insights` configuration enabled.
 
 ### Licenses
 
