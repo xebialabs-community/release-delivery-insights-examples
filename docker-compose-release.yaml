@@ -1,7 +1,7 @@
 version: '2.3'
 services:
   xl-release:
-    image: digitalai/continuum-dev-xlrelease
+    image: release-delivery-insights-dev
     build: docker/xl-release
     ports:
     - 5516:5516
