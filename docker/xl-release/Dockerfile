@@ -1,5 +1,5 @@
 # Offical
-FROM xl-docker.xebialabs.com/xl-release:10.1.0-407.113
+FROM xl-docker.xebialabs.com/xl-release:10.1.0-415.113
 
 # Install license
 COPY default-conf/xl-release-license.lic /opt/xebialabs/xl-release-server/default-conf/
