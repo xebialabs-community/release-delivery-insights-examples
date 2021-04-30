@@ -2,7 +2,7 @@ apiVersion: xl-release/v1
 kind: Templates
 spec:
 
-- name: Continuum
+- name: Delivery Insights Service
   type: continuum.ContinuumServer
   url: !value continuum_url
   apiToken: !value continuum_apiToken
@@ -11,7 +11,7 @@ spec:
   type: jira.Server
   url: !value jira_url
   username: !value jira_user
-  password: !value jira_password
+  apiToken: !value jira_token
 
 - name: GitHub
   type: github.Server

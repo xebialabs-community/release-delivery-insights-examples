@@ -11,9 +11,7 @@ Here are a few Digital.ai Release templates that are readily available to simpli
 
 ## Templates included:
 
-??? 
-
-    
+There is one example template under `Delivery Insights`. The template provides a guide to show the basic functionality of the 3 tasks included in the plugin.    
 
 ## Prerequisites
 
@@ -41,6 +39,7 @@ License files are in `.gitignore` to prevent them from being committed.
 ### Known limitations
 
 - The Github connection on Release must use `token` instead of combination of username and password.
+- The Jira connection must use `token` and not `password` field
 
 ## Setup
 ### Configure passwords
@@ -52,7 +51,7 @@ Create a file `~/.xebialabs/secrets.xlvals`, paste in the following section and 
     
     jira_url = https://yourcompany.atlassian.net/
     jira_user = your_jira_user
-    jira_password = your_jira_password
+    jira_token = your_jira_token
     
     github_token: your_github_token
     
