@@ -75,6 +75,150 @@ spec:
         package: "${application}"
       color: '#991C71'
 
+  - template: Feature branches with CD
+    description: |-
+      Example of a release process using feature branches with continuous delivery. This template expects the following variables:
+      - `myFeature`: feature name used later to create Github branch with the same name.
+      - `application`: name of the application created in the Package Progression dashboard.
+      - `gitRepository`: Github repository name to create the branch and later on pull request.
+
+      It also expects a progression board with an application with the following phases:
+      - `Development`
+      - `Integration`
+      - `Ready to deliver`
+    phases:
+    - phase: "Build ${myFeature} branch"
+      tasks:
+      - name: "Create feature branch ${myFeature}"
+        type: github.CreateBranch
+        server: GitHub
+        repositoryName: "${gitRepository}"
+        newBranch: "${myFeature}"
+      - name: Developers push code
+        type: xlrelease.Task
+      - name: Create Pull Request
+        type: github.CreatePullRequest
+        server: GitHub
+        repositoryName: "${gitRepository}"
+        ^title: "Code changes for ${myFeature}"
+        base: master
+        head: "${myFeature}"
+        body: "- [ ] Merge me once every is green"
+        variableMapping:
+          pythonScript.pullRequestNumber: "${pullRequestNumber}"
+      - name: Build branch
+        type: xlrelease.ScriptTask
+        script: |-
+          import random
+
+          releaseVariables["buildNumber"] = "#{}".format(random.randint(1, 99999))
+      - name: "Track code from branch ${myFeature}"
+        type: continuum.TrackCode
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        group: "${myFeature}"
+        phase: Development
+        variableMapping:
+          pythonScript.revision: "${revision}"
+      - name: Check your Progression Board dashboard
+        type: xlrelease.Task
+        description: See how a new card with your code has appeared in your Development
+          branch
+      color: '#0079BC'
+    - phase: "Deploy ${myFeature}"
+      tasks:
+      - name: Deploy to Integration
+        type: xlrelease.ScriptTask
+        script: print "Deployed"
+      - name: Move code to next integration phase
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Integration
+      - name: Check your Progression Board dashboard
+        type: xlrelease.Task
+        description: Your code is now ready for QA Testing
+      color: '#498500'
+    - phase: QA testing phase
+      tasks:
+      - name: Are all tests passing?
+        type: xlrelease.UserInputTask
+        description: Please enter the required information below.
+        variables:
+        - tests
+      - name: ✅ Tests are green
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables[\"tests\"] == True"
+        tasks:
+        - name: Merge code
+          type: github.MergePullRequest
+          server: GitHub
+          repositoryName: "${gitRepository}"
+          commitMessage: "Developed feature ${myFeature}"
+          variableMapping:
+            pythonScript.pullRequestNumber: "${pullRequestNumber}"
+        - name: Build code merged
+          type: xlrelease.ScriptTask
+          script: |-
+            import random
+
+            releaseVariables["mergeBuildNumber"] = "#{}".format(random.randint(1, 99999))
+        - name: Prepare code to deliver
+          type: continuum.PromoteAPackage
+          continuumServer: Delivery Insights Service
+          package: "${application}"
+          phase_name: Ready to deliver
+          new_version: "${mergeBuildNumber}"
+        - name: Check your Progression Board dashboard
+          type: xlrelease.Task
+          description: Your code now it's on the last stage
+      - name: ❌ Tests failed
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables[\"tests\"] == False"
+        tasks:
+        - name: Create a new release
+          type: xlrelease.Task
+          description: "Since tests are failing, we recommend to start a new release\
+            \ setting up a new feature branch to correct the defects"
+      color: '#CC4A3C'
+    - phase: Deliver
+      tasks:
+      - name: Let's deliver code
+        type: xlrelease.SequentialGroup
+        description: "releaseVariables[\"tests\"] == True"
+        tasks:
+        - name: Deliver code
+          type: continuum.DeliverRevision
+          continuumServer: Delivery Insights Service
+          package: "${application}"
+        - name: Check your Progression Board dashboard
+          type: xlrelease.Task
+          description: Your code is not longer visible as it's delivered already
+      color: '#991C71'
+    variables:
+    - type: xlrelease.StringVariable
+      key: myFeature
+    - type: xlrelease.StringVariable
+      key: revision
+      showOnReleaseStart: false
+    - type: xlrelease.BooleanVariable
+      key: tests
+      showOnReleaseStart: false
+      label: All good?
+    - type: xlrelease.StringVariable
+      key: mergeBuildNumber
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: application
+    - type: xlrelease.StringVariable
+      key: gitRepository
+    - type: xlrelease.IntegerVariable
+      key: pullRequestNumber
+      requiresValue: false
+      showOnReleaseStart: false
+    scriptUsername: admin
+    scriptUserPassword: admin
+
   - name: Package progression
     type: continuum.PackageProgressionDashboard
     owner: admin
