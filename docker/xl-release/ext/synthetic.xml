@@ -1,0 +1,23 @@
+
+<synthetic xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns="http://www.xebialabs.com/deployit/synthetic"
+           xsi:schemaLocation="http://www.xebialabs.com/deployit/synthetic synthetic.xsd">
+
+    <!-- Types are described at https://digitalai.atlassian.net/wiki/spaces/Labs/pages/823820343/The+XL+Type+System -->
+    <type type="test.SampleDataTypes" extends="xlrelease.ConfigurationFacet" label="Sample Datatypes">
+        <property name="sampleBoolean"  label="Boolean"  required="false"  category="input" kind="boolean" description="a sample boolean value"/>
+        <property name="sampleInteger"  label="Integer"  required="false"  category="input" kind="integer"/>
+        <property name="sampleString"   label="String"   required="false"  category="input" kind="string" default="default string"/>
+        <property name="sampleDate"     label="Date"     required="false"  category="input" kind="date"/>   
+        <property name="enum"           label="Enum"     required="false"  category="input" kind="enum">
+            <enum-values>
+                <value>SampleValue1</value>
+                <value>SampleValue2</value>
+            </enum-values>
+        </property>
+        <property name="sampleList"     label="List"     required="false"  category="input" kind="list_of_string"/>  
+        <property name="sampleMap"      label="Map"      required="false"  category="input" kind="map_string_string"/>   
+        <property name="sampleSet"      label="Set"      required="false"  category="input" kind="set_of_string"/>   
+    </type>
+
+</synthetic>
