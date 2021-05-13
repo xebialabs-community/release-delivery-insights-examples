@@ -219,6 +219,126 @@ spec:
     scriptUsername: admin
     scriptUserPassword: admin
 
+  - template: Mainline branch with nightly build
+    description: |-
+      Example of a release process using only one branch, often the main or master branch. This template expects the following variables:
+      - `initialPhase`: name of the initial phase where workitems are gathered after build and code track
+      - `application`: name of the application created in the Package Progression dashboard
+      - `nextPhase`: name of the next phase to which card will be promoted
+    phases:
+      - phase: Build and track
+        tasks:
+          - name: Build
+            type: xlrelease.ScriptTask
+            description: Simulation of a build process.
+            script: "releaseVariables[\"buildNumber\"] = \"1.0\""
+          - name: Track new code commits
+            type: continuum.TrackCode
+            continuumServer: Continuum
+            package: "${application}"
+            group: master
+            phase: "${initialPhase}"
+            version: "${buildNumber}"
+            description: Add workitems to the board
+            variableMapping:
+              pythonScript.revision: "${revision}"
+          - name: "Verify work is on ${initialPhase}"
+            type: xlrelease.Task
+            description: "Go to folder dashboards / Package progression.\nA card with your\
+          \ commits should be in phase ${initialPhase}."
+      - phase: "Promote to ${nextPhase}"
+        tasks:
+          - name: Set up next phase
+            type: xlrelease.UserInputTask
+            description: Please enter the required information below.
+            variables:
+              - nextPhase
+          - name: Promote to next phase
+            type: continuum.PromoteAPackage
+            continuumServer: Continuum
+            package: "${application}"
+            phase_name: "${nextPhase}"
+            description: "Promote card with your commits to the next phase, moving from\
+          \ left to right."
+          - name: "Verify work is on ${nextPhase}"
+            type: xlrelease.Task
+            description: "Go to folder dashboards / Package progression\nA card with your\
+          \ commits should be in phase ${nextPhase}"
+        color: '#498500'
+      - phase: Issues found
+        tasks:
+          - name: Issues Found?
+            type: xlrelease.UserInputTask
+            description: Please enter the required information below.
+            variables:
+              - hasIssues
+          - name: Build and track after issues fixed
+            type: xlrelease.SequentialGroup
+            description: Issues were found during the release process?
+            precondition: "releaseVariables['hasIssues'] == True"
+            tasks:
+              - name: Build
+                type: xlrelease.ScriptTask
+                description: Simulation of a build process
+                script: "releaseVariables[\"buildNumber\"] = \"1.0\""
+              - name: Track new code commits
+                type: continuum.TrackCode
+                continuumServer: Continuum
+                package: "${application}"
+                group: master
+                phase: "${initialPhase}"
+                version: "${buildNumber}"
+                description: Add workitems to the board
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: "Verify work is on ${initialPhase}"
+                type: xlrelease.Task
+                description: "Go to folder dashboards / Package progression.\nA card with\
+            \ your commits should be in phase ${initialPhase}."
+              - name: "Promote to ${nextPhase}"
+                type: continuum.PromoteAPackage
+                continuumServer: Continuum
+                package: "${application}"
+                phase_name: "${nextPhase}"
+              - name: "Verify work is on ${nextPhase}"
+                type: xlrelease.Task
+                description: "Go to folder dashboards / Package progression.\nA card with\
+            \ your commits should be in phase ${nextPhase}."
+        color: '#CC4A3C'
+      - phase: Remove revision
+        tasks:
+          - name: Delivery revision
+            type: continuum.DeliverRevision
+            continuumServer: Continuum
+            package: "${application}"
+            description: Remove card from the board.
+          - name: Verify work is gone
+            type: xlrelease.Task
+            description: "Go to: folder dashboards / Package progression.\nThe card should\
+          \ not be on the board anymore."
+        color: '#991C71'
+    variables:
+      - type: xlrelease.StringVariable
+        key: buildNumber
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: revision
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: initialPhase
+      - type: xlrelease.StringVariable
+        key: application
+      - type: xlrelease.StringVariable
+        key: nextPhase
+      - type: xlrelease.BooleanVariable
+        key: hasIssues
+        showOnReleaseStart: false
+        label: Issues found?
+        description: Has any issue been found during the release process?
+    riskProfile: Default risk profile
+
   - name: Package progression
     type: continuum.PackageProgressionDashboard
     owner: admin
