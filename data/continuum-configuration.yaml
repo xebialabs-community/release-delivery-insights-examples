@@ -234,7 +234,7 @@ spec:
             script: "releaseVariables[\"buildNumber\"] = \"1.0\""
           - name: Track new code commits
             type: continuum.TrackCode
-            continuumServer: Continuum
+            continuumServer: Delivery Insights Service
             package: "${application}"
             group: master
             phase: "${initialPhase}"
@@ -255,7 +255,7 @@ spec:
               - nextPhase
           - name: Promote to next phase
             type: continuum.PromoteAPackage
-            continuumServer: Continuum
+            continuumServer: Delivery Insights Service
             package: "${application}"
             phase_name: "${nextPhase}"
             description: "Promote card with your commits to the next phase, moving from\
@@ -283,7 +283,7 @@ spec:
                 script: "releaseVariables[\"buildNumber\"] = \"1.0\""
               - name: Track new code commits
                 type: continuum.TrackCode
-                continuumServer: Continuum
+                continuumServer: Delivery Insights Service
                 package: "${application}"
                 group: master
                 phase: "${initialPhase}"
@@ -297,7 +297,7 @@ spec:
             \ your commits should be in phase ${initialPhase}."
               - name: "Promote to ${nextPhase}"
                 type: continuum.PromoteAPackage
-                continuumServer: Continuum
+                continuumServer: Delivery Insights Service
                 package: "${application}"
                 phase_name: "${nextPhase}"
               - name: "Verify work is on ${nextPhase}"
@@ -309,7 +309,7 @@ spec:
         tasks:
           - name: Delivery revision
             type: continuum.DeliverRevision
-            continuumServer: Continuum
+            continuumServer: Delivery Insights Service
             package: "${application}"
             description: Remove card from the board.
           - name: Verify work is gone
