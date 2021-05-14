@@ -219,6 +219,162 @@ spec:
     scriptUsername: admin
     scriptUserPassword: admin
 
+  - template: Feature branches with CI
+    description: This release will be the flow for using feature branches that are tested
+      then merged with the mainline branch (release candidate) and then delivered after
+      Regression testing.
+    phases:
+    - phase: Development
+      tasks:
+      - name: Devs write code!
+        type: xlrelease.Task
+        description: Devs include a story number in the Branch name as well as each
+          commit message.
+        owner: admin
+      - name: Track commits from new branch.
+        type: continuum.TrackCode
+        continuumServer: Delivery Insights Service
+        package: "${AppName}"
+        group: "${branch}"
+        phase: Developing
+        description: |-
+          This step could be triggered by a git trigger. This represents new code being pushed to a feature branch.
+
+          For the purposes of this release template, we will assume that each branch is only one commit and move on to testing.
+
+          In a normal work flow, we would stop the release here and have a separate release to promote the card to "testing" when it was ready.
+        variableMapping:
+          pythonScript.revision: "${revision}"
+      - name: A Pull Request is made.
+        server: GitHub
+        type: github.CreatePullRequest
+        repositoryName: "${repo}"
+        ^title: "${branch}"
+        base: "${mainORmaster}"
+        head: "${branch}"
+        body: "${branch}"
+        description: The work is said to be done and is ready for testing.
+        owner: admin
+        variableMapping:
+          pythonScript.pullRequestNumber: "${PRnumber}"
+    - phase: Testing
+      tasks:
+      - name: Move to "Testing"
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${AppName}"
+        phase_name: Testing
+        description: |-
+          This step moves the card to "Testing".
+
+          In a normal workflow, this could be triggered by something like a PR.
+      - name: Test your code
+        type: xlrelease.UserInputTask
+        description: This manual step represents the completion of whatever process
+          you use to test a feature branch before merging it into the mainline branch.
+        owner: admin
+        variables:
+        - TestsGreen
+      - name: Tests Passed!
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables['TestsGreen'] == True"
+        tasks:
+        - name: Merge Pull Request
+          type: github.MergePullRequest
+          server: GitHub
+          repositoryName: "${repo}"
+          commitMessage: "Merge ${branch}"
+          owner: admin
+          variableMapping:
+            pythonScript.pullRequestNumber: "${PRnumber}"
+      - name: Tests Failed
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables['TestsGreen'] == False"
+        tasks:
+        - name: Do more work! Start new release
+          type: xlrelease.Task
+      color: '#498500'
+    - phase: Waiting for Release
+      tasks:
+      - name: Move to "Ready for Release"
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${AppName}"
+        phase_name: Ready for Release
+        new_version: "${releaseVersion}"
+        description: "After testing and merging the feature branch, we want to not only\
+          \ promote the new card but also reversion the card to match the current Release\
+          \ Candidate's version. This is so that the cards will merge and collect all\
+          \ the work that has been done in this version."
+      - name: The Release Candidate sits and collects Cards.
+        type: xlrelease.Task
+        description: "As feature branches are reversioned and promoted, they merge,\
+          \ becoming one card."
+        owner: admin
+      color: '#FFAB00'
+    - phase: Final testing
+      tasks:
+      - name: Move to "Regression"
+        continuumServer: Delivery Insights Service
+        type: continuum.PromoteAPackage
+        package: "${AppName}"
+        phase_name: Regression
+        description: "After testing and merging the feature branch, we want to not only\
+          \ promote the new card but also reversion the card to match the current Release\
+          \ Candidate's version. This is so that the cards will merge and collect all\
+          \ the work that has been done in this version."
+      - name: Finish regression testIng
+        type: xlrelease.Task
+        description: This manual step represents the completion of whatever process
+          you use to test a Release Candidate before publishing.
+        owner: admin
+      color: '#CC4A3C'
+    - phase: Delivery
+      tasks:
+      - name: Move to "Release"
+        continuumServer: Delivery Insights Service
+        type: continuum.PromoteAPackage
+        package: "${AppName}"
+        phase_name: Release
+        description: "Once you are ready to deliver, this moves the card to \"Release\"\
+          \ for any last-minute tasks before you go live."
+      - name: Finish pre/post Release tasks.
+        type: xlrelease.Task
+        owner: admin
+      - name: Remove card from board
+        continuumServer: Delivery Insights Service
+        type: continuum.DeliverRevision
+        package: "${AppName}"
+        description: "Once all of the work is done and everything is live, we remove\
+          \ the card so that we are no longer tracking the work it contains."
+      color: '#991C71'
+    variables:
+    - type: xlrelease.StringVariable
+      key: revision
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: branch
+    - type: xlrelease.StringVariable
+      key: repo
+    - type: xlrelease.BooleanVariable
+      key: TestsGreen
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: releaseVersion
+    - type: xlrelease.IntegerVariable
+      key: PRnumber
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: AppName
+    - type: xlrelease.StringVariable
+      key: mainORmaster
+    riskProfile: Default risk profile
+    scriptUsername: admin
+    scriptUserPassword: admin
+
   - template: Mainline branch with nightly build
     description: |-
       Example of a release process using only one branch, often the main or master branch. This template expects the following variables:
