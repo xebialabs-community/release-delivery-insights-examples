@@ -678,14 +678,14 @@ spec:
         description: Ready to deliver phase
         value: Ready to deliver
     scriptUsername: admin
-    scriptUserPassword: !value "xlrelease_Release_Release_branches_with_nightly_build_scriptUserPassword"
+    scriptUserPassword: admin
     riskProfile: Default risk profile
 
-  - name: Package progression
+  - name: Delivery Insigths
     type: continuum.PackageProgressionDashboard
     owner: admin
     tiles:
-      - name: Package progression
+      - name: Progression board
         type: continuum.PackageProgressionTile
         server: Delivery Insights Service
         row: 0
