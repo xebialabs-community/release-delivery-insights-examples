@@ -495,6 +495,192 @@ spec:
         description: Has any issue been found during the release process?
     riskProfile: Default risk profile
 
+  - template: Release branches with nightly build
+    description: "Example of a release process using release branches with nightly build.\
+      \ This template expects the following variables:\n\n- `mainlineBranch`: name of\
+      \ the mainline branch (long lived branch)\n- `application`: name of the application\
+      \ created in the Package Progression dashboard.\n- `releaseVersion`: version of\
+      \ the release from which release branch will be created (if it does not exist\
+      \ already)\n- `gitRepository`: Github repository name in which our branches will\
+      \ be created\n\nIt also expects a progression board with an application with the\
+      \ following phases:\n- `Development`\n- `Integration`\n- `Ready to deliver`"
+    phases:
+      - phase: Mainline or release?
+        tasks:
+          - name: Mainline or release work?
+            type: xlrelease.UserInputTask
+            description: Is worked based on mainline or release branch?
+            variables:
+              - isMainlineWork
+        color: '#FFAB00'
+      - phase: Build and track
+        tasks:
+          - name: "Build ${mainlineBranch} branch"
+            type: xlrelease.SequentialGroup
+            description: "Build and track code from ${mainlineBranch}"
+            precondition: "releaseVariables[\"isMainlineWork\"] == True"
+            tasks:
+              - name: Build branch
+                type: xlrelease.ScriptTask
+                description: Simulate build process
+                script: "import random\n\nreleaseVariables[\"buildNumber\"] = \"#{}\".format(random.randint(1,\
+            \ 99999))"
+              - name: "Track code from ${mainlineBranch} branch"
+                type: continuum.TrackCode
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                group: "${mainlineBranch}"
+                phase: "${devPhase}"
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: See how a new card with your code has appeared on the first phase
+                  of the Progression Board.
+          - name: "Build ${releaseVersion} branch"
+            type: xlrelease.SequentialGroup
+            description: "Tasks which will execute if work is merged to the ${releaseVersion}\
+          \ branch."
+            precondition: "releaseVariables[\"isMainlineWork\"] == False"
+            tasks:
+              - name: Build branch
+                type: xlrelease.ScriptTask
+                description: Simulate branch build process
+                script: "import random\n\nreleaseVariables[\"buildNumber\"] = \"#{}\".format(random.randint(1,\
+            \ 99999))"
+              - name: "Track code from ${releaseVersion} branch"
+                type: continuum.TrackCode
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                group: "${releaseVersion}"
+                phase: "${devPhase}"
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: See how a new card with your code has appeared on the first phase
+                  of the Progression Board.
+        color: '#0079BC'
+      - phase: Release\/promote
+        tasks:
+          - name: "Create ${releaseVersion} branch and promote"
+            type: xlrelease.SequentialGroup
+            description: Create release branch from mainline branch. Applicable only if
+              work has been merged to mainline branch.
+            precondition: "releaseVariables[\"isMainlineWork\"] == True"
+            tasks:
+              - name: "Create ${releaseVersion} branch"
+                type: github.CreateBranch
+                server: GitHub
+                repositoryName: "${gitRepository}"
+                oldBranch: "${mainlineBranch}"
+                newBranch: "${releaseVersion}"
+          - name: Promote to next phase
+            type: continuum.PromoteAPackage
+            continuumServer: Delivery Insights Service
+            package: "${application}"
+            phase_name: "${integrationPhase}"
+            new_version: "${releaseVersion}"
+            description: "Promote card to ${integrationPhase}"
+          - name: Check your Progression Board dashboard
+            type: xlrelease.Task
+            description: "Your code is now promoted to ${integrationPhase}"
+        color: '#498500'
+      - phase: QA testing phase
+        tasks:
+          - name: Are all tests passing?
+            type: xlrelease.UserInputTask
+            description: Check this checkbox if all tests are passing and you are ready
+              to promote this card to the final phase
+            variables:
+              - isEveryTestPassing
+          - name: ✅ All tests passing
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == True"
+            tasks:
+              - name: Promote to next phase
+                type: continuum.PromoteAPackage
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                phase_name: "${deliveryPhase}"
+                description: "Promote card to ${deliveryPhase}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: Your code is now promoted to the last phase
+          - name: ❌ Tests failed
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == False"
+            tasks:
+              - name: Create a new release
+                type: xlrelease.Task
+                description: "Since tests are failing, we recommend fixing issues and setting\
+            \ up a new release."
+        color: '#CC4A3C'
+      - phase: Deliver
+        tasks:
+          - name: Let's deliver code
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == True"
+            tasks:
+              - name: Deliver code
+                type: continuum.DeliverRevision
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                description: Code will be delivered and removed from the Progression Board
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: Your code is not longer visible as it's delivered already
+        color: '#991C71'
+    variables:
+      - type: xlrelease.StringVariable
+        key: mainlineBranch
+        label: Mainline branch
+        description: Name of the mainline branch
+      - type: xlrelease.StringVariable
+        key: application
+        label: Application name
+      - type: xlrelease.StringVariable
+        key: releaseVersion
+        label: Release version
+      - type: xlrelease.StringVariable
+        key: revision
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: gitRepository
+        label: Git repository
+      - type: xlrelease.BooleanVariable
+        key: isEveryTestPassing
+        showOnReleaseStart: false
+        label: All good?
+      - type: xlrelease.BooleanVariable
+        key: isMainlineWork
+        showOnReleaseStart: false
+        label: Mainline work?
+        description: Is code merged to the mainline branch?
+        value: true
+      - type: xlrelease.StringVariable
+        key: devPhase
+        showOnReleaseStart: false
+        label: Dev phase
+        description: Development phase
+        value: Development
+      - type: xlrelease.StringVariable
+        key: integrationPhase
+        showOnReleaseStart: false
+        label: Integration phase
+        description: Integration phase
+        value: Integration
+      - type: xlrelease.StringVariable
+        key: deliveryPhase
+        showOnReleaseStart: false
+        label: Delivery phase
+        description: Ready to deliver phase
+        value: Ready to deliver
+    scriptUsername: admin
+    scriptUserPassword: !value "xlrelease_Release_Release_branches_with_nightly_build_scriptUserPassword"
+    riskProfile: Default risk profile
+
   - name: Package progression
     type: continuum.PackageProgressionDashboard
     owner: admin
