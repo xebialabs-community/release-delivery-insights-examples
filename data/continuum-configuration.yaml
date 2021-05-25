@@ -5,6 +5,8 @@ spec:
   children:
 
   - template: Track code and promote
+    description: |-
+      Simple template that shows all the new tasks available to use.
     variables:
     - type: xlrelease.StringVariable
       key: revision
@@ -79,7 +81,7 @@ spec:
     description: |-
       Example of a release process using feature branches with continuous delivery. This template expects the following variables:
       - `myFeature`: feature name used later to create Github branch with the same name.
-      - `application`: name of the application created in the Package Progression dashboard.
+      - `application`: name of the application created in the Progression dashboard.
       - `gitRepository`: Github repository name to create the branch and later on pull request.
 
       It also expects a progression board with an application with the following phases:
@@ -220,9 +222,21 @@ spec:
     scriptUserPassword: admin
 
   - template: Feature branches with CI
-    description: This release will be the flow for using feature branches that are tested
-      then merged with the mainline branch (release candidate) and then delivered after
-      Regression testing.
+    description: |-
+      This release will be the flow for using feature branches that are tested then merged with the mainline branch (release candidate) and then delivered after Regression testing.
+      This template expects the following variables:
+      - `branch`: the feature branch
+      - `repo`: name of the repository
+      - `releaseVersion`: the release version
+      - `application`: application name
+      -  `mainORmaster`: the main branch where the code is going to be merged
+
+      It also expects a progression board with an application with the following phases:
+      - `Developing`
+      - `Testing`
+      - `Ready for Release`
+      - `Regression`
+      - `Release`
     phases:
     - phase: Development
       tasks:
@@ -234,7 +248,7 @@ spec:
       - name: Track commits from new branch.
         type: continuum.TrackCode
         continuumServer: Delivery Insights Service
-        package: "${AppName}"
+        package: "${application}"
         group: "${branch}"
         phase: Developing
         description: |-
@@ -262,7 +276,7 @@ spec:
       - name: Move to "Testing"
         type: continuum.PromoteAPackage
         continuumServer: Delivery Insights Service
-        package: "${AppName}"
+        package: "${application}"
         phase_name: Testing
         description: |-
           This step moves the card to "Testing".
@@ -299,7 +313,7 @@ spec:
       - name: Move to "Ready for Release"
         type: continuum.PromoteAPackage
         continuumServer: Delivery Insights Service
-        package: "${AppName}"
+        package: "${application}"
         phase_name: Ready for Release
         new_version: "${releaseVersion}"
         description: "After testing and merging the feature branch, we want to not only\
@@ -317,7 +331,7 @@ spec:
       - name: Move to "Regression"
         continuumServer: Delivery Insights Service
         type: continuum.PromoteAPackage
-        package: "${AppName}"
+        package: "${application}"
         phase_name: Regression
         description: "After testing and merging the feature branch, we want to not only\
           \ promote the new card but also reversion the card to match the current Release\
@@ -334,7 +348,7 @@ spec:
       - name: Move to "Release"
         continuumServer: Delivery Insights Service
         type: continuum.PromoteAPackage
-        package: "${AppName}"
+        package: "${application}"
         phase_name: Release
         description: "Once you are ready to deliver, this moves the card to \"Release\"\
           \ for any last-minute tasks before you go live."
@@ -344,7 +358,7 @@ spec:
       - name: Remove card from board
         continuumServer: Delivery Insights Service
         type: continuum.DeliverRevision
-        package: "${AppName}"
+        package: "${application}"
         description: "Once all of the work is done and everything is live, we remove\
           \ the card so that we are no longer tracking the work it contains."
       color: '#991C71'
@@ -368,7 +382,7 @@ spec:
       requiresValue: false
       showOnReleaseStart: false
     - type: xlrelease.StringVariable
-      key: AppName
+      key: application
     - type: xlrelease.StringVariable
       key: mainORmaster
     riskProfile: Default risk profile
@@ -496,14 +510,17 @@ spec:
     riskProfile: Default risk profile
 
   - template: Release branches with nightly build
-    description: "Example of a release process using release branches with nightly build.\
-      \ This template expects the following variables:\n\n- `mainlineBranch`: name of\
-      \ the mainline branch (long lived branch)\n- `application`: name of the application\
-      \ created in the Package Progression dashboard.\n- `releaseVersion`: version of\
-      \ the release from which release branch will be created (if it does not exist\
-      \ already)\n- `gitRepository`: Github repository name in which our branches will\
-      \ be created\n\nIt also expects a progression board with an application with the\
-      \ following phases:\n- `Development`\n- `Integration`\n- `Ready to deliver`"
+    description: |-
+      Example of a release process using release branches with nightly build. This template expects the following variables:
+      - `mainlineBranch`: name of the mainline branch (long lived branch)
+      - `application`: name of the application created in the Package Progression dashboard.
+      - `releaseVersion`: version of the release from which release branch will be created (if it does not exist already)
+      - `gitRepository`: Github repository name in which our branches will be created
+
+      It also expects a progression board with an application with the following phases:
+      - `Development`
+      - `Integration`
+      - `Ready to deliver`
     phases:
       - phase: Mainline or release?
         tasks:
