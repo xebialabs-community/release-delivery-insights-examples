@@ -1,454 +1,709 @@
 apiVersion: xl-release/v1
 kind: Templates
 spec:
-- directory: Continuum Integration
+- directory: Delivery Insights
   children:
 
-  - template: Continuum Server Configuration
-
-    phases:
-      - phase: Configuration
-        tasks:
-
-          - name: Create default progression
-            type: continuum.ImportProgression
-            continuumServer: Continuum
-            backup: |-
-              {
-                "description": "",
-                "name": "(a) Default Package Progression",
-                "phases": [
-                  {
-                    "code_complete": "False",
-                    "delivery_category": "Developing",
-                    "description": "",
-                    "name": "Master integration"
-                  },
-                  {
-                    "code_complete": "True",
-                    "delivery_category": "Packaged",
-                    "description": "",
-                    "name": "QA"
-                  },
-                  {
-                    "code_complete": "False",
-                    "delivery_category": "Packaged",
-                    "description": "",
-                    "name": "GA"
-                  }
-                ]
-              }
-
-          - name: Configure Pipeline to create package
-            type: continuum.ImportCatalog
-            continuumServer: Continuum
-            content: |-
-              {
-                "pipelines": [
-                  {
-                    "actions": "",
-                    "category": "General",
-                    "dependencies": [],
-                    "description": "",
-                    "globals": {},
-                    "interactive": "False",
-                    "name": "(a) Create package revision",
-                    "phases": [
-                      {
-                        "name": "",
-                        "stages": [
-                          {
-                            "name": "",
-                            "steps": [
-                              {
-                                "name": "",
-                                "plugin": {
-                                  "args": {
-                                    "description": "",
-                                    "globals_key": "PACKAGE_GLOBALS",
-                                    "package": "[$ package_name $]",
-                                    "result_key": "PACKAGE_INFO",
-                                    "version": "[$ branch $]"
-                                  },
-                                  "label": "Flow - Package - New Revision",
-                                  "method": "new_revision",
-                                  "module": "package",
-                                  "name": "flow"
-                                },
-                                "when": "always"
-                              },
-                              {
-                                "name": "",
-                                "plugin": {
-                                  "args": {
-                                    "full_version": "",
-                                    "new_full_version": "[$ full_version $]",
-                                    "new_version": "[$ version $]",
-                                    "package": "[$ package_name $]",
-                                    "phase": "Master integration",
-                                    "revision": "[$ PACKAGE_INFO[\"revision\"] $]"
-                                  },
-                                  "label": "Flow - Package - Promote Revision",
-                                  "method": "promote",
-                                  "module": "package",
-                                  "name": "flow"
-                                },
-                                "when": "always"
-                              },
-                              {
-                                "name": "",
-                                "plugin": {
-                                  "args": {
-                                    "include": "both",
-                                    "targetkey": "MANIFEST_INFO",
-                                    "verbose": "true"
-                                  },
-                                  "label": "Flow - Manifest - Copy to Workspace",
-                                  "method": "manifest_to_workspace",
-                                  "module": "pipeline",
-                                  "name": "flow"
-                                },
-                                "when": "always"
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ],
-                    "pipelineglobals": {},
-                    "summary": [],
-                    "team": "Default"
-                  }
-                ]
-              }
-            overwrite: true
-            import_projects: false
-            import_packages: false
-            import_tasks: false
-            human_readable: true
-
-          - name: OK?
-            type: xlrelease.GateTask
-
-  - template: Continuum Project Configuration
-
+  - template: Track code and promote
+    description: |-
+      Simple template that shows all the new tasks available to use.
     variables:
     - type: xlrelease.StringVariable
-      key: projectName
-      label: Project name
-      description: The name of the project in Continuum
-      value: (a) Digital.ai Release
+      key: revision
+      requiresValue: false
+      showOnReleaseStart: false
     - type: xlrelease.StringVariable
-      key: progression
-      label: Progression
-      description: The Progression (list of phases) to use for the Value Stream
-      valueProvider:
-        type: xlrelease.ListOfStringValueProviderConfiguration
-        values:
-          - (a) Default Package Progression
-          - DevOps
-          - Demo
-      value: (a) Default Package Progression
-
+      key: application
+      label: Name of the application
+    - type: xlrelease.StringVariable
+      key: branch
+      label: Name of the branch
+      value: master
+    scriptUsername: admin
+    scriptUserPassword: admin
+    
     phases:
-      - phase: Configuration
+    - phase: Build
+      tasks:
+      - name: Run the build
+        type: xlrelease.Task
+        description: "Run the build in this step, you can use a Jenkins Build Task for example"
+      - name: Track your code changes
+        type: continuum.TrackCode
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        group: "${branch}"
+        phase: Dev
+        variableMapping:
+          pythonScript.revision: "${revision}"
+      color: '#CC4A3C'
+    - phase: QA
+      tasks:
+      - name: Deploy to QA
+        type: xlrelease.Task
+      - name: Promote code to QA
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: QA
+      color: '#0079BC'
+    - phase: Stage
+      tasks:
+      - name: Deploy to Stage
+        type: xlrelease.Task
+      - name: Promote code to Stage
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Stage
+      color: '#498500'
+    - phase: Production
+      tasks:
+      - name: Deploy to Production
+        type: xlrelease.Task
+      - name: Promote code to Production
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Production
+      color: '#FFAB00'
+    - phase: Post Production
+      tasks:
+      - name: Wait for some time
+        type: xlrelease.Task
+      - name: Remove card
+        type: continuum.DeliverRevision
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+      color: '#991C71'
+
+  - template: Feature branches with CD
+    description: |-
+      Example of a release process using feature branches with continuous delivery. This template expects the following variables:
+      - `myFeature`: feature name used later to create Github branch with the same name.
+      - `application`: name of the application created in the Progression dashboard.
+      - `gitRepository`: Github repository name to create the branch and later on pull request.
+
+      It also expects a progression board with an application with the following phases:
+      - `Development`
+      - `Integration`
+      - `Ready to deliver`
+    phases:
+    - phase: "Build ${myFeature} branch"
+      tasks:
+      - name: "Create feature branch ${myFeature}"
+        type: github.CreateBranch
+        server: GitHub
+        repositoryName: "${gitRepository}"
+        newBranch: "${myFeature}"
+      - name: Developers push code
+        type: xlrelease.Task
+      - name: Create Pull Request
+        type: github.CreatePullRequest
+        server: GitHub
+        repositoryName: "${gitRepository}"
+        ^title: "Code changes for ${myFeature}"
+        base: master
+        head: "${myFeature}"
+        body: "- [ ] Merge me once every is green"
+        variableMapping:
+          pythonScript.pullRequestNumber: "${pullRequestNumber}"
+      - name: Build branch
+        type: xlrelease.ScriptTask
+        script: |-
+          import random
+
+          releaseVariables["buildNumber"] = "#{}".format(random.randint(1, 99999))
+      - name: "Track code from branch ${myFeature}"
+        type: continuum.TrackCode
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        group: "${myFeature}"
+        phase: Development
+        variableMapping:
+          pythonScript.revision: "${revision}"
+      - name: Check your Progression Board dashboard
+        type: xlrelease.Task
+        description: See how a new card with your code has appeared in your Development
+          branch
+      color: '#0079BC'
+    - phase: "Deploy ${myFeature}"
+      tasks:
+      - name: Deploy to Integration
+        type: xlrelease.ScriptTask
+        script: print "Deployed"
+      - name: Move code to next integration phase
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Integration
+      - name: Check your Progression Board dashboard
+        type: xlrelease.Task
+        description: Your code is now ready for QA Testing
+      color: '#498500'
+    - phase: QA testing phase
+      tasks:
+      - name: Are all tests passing?
+        type: xlrelease.UserInputTask
+        description: Please enter the required information below.
+        variables:
+        - tests
+      - name: ✅ Tests are green
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables[\"tests\"] == True"
         tasks:
-          - name: Configure GitHub
-            type: continuum.ConfigureGithub
-            continuumServer: Continuum
-            githubServer: GitHub xl-release
-            taskFailureHandlerEnabled: true
-            taskRecoverOp: SKIP_TASK
-          - name: Configure JIRA
-            type: continuum.ConfigureJira
-            continuumServer: Continuum
-            jiraServer: Jira Server
-            improve_types:
-              - Story
-            maintain_types:
-              - Bug
-              - Task
-            taskFailureHandlerEnabled: true
-            taskRecoverOp: SKIP_TASK
-          - name: Configure Project
-            type: continuum.ImportCatalog
-            continuumServer: Continuum
-            content: |-
-              {
-                "projects": [
-                  {
-                    "actions": [],
-                    "artifacts": [],
-                    "description": "",
-                    "globals": {},
-                    "mappings": [],
-                    "name": "${projectName}",
-                    "notifications": {
-                      "email": {
-                        "addresses": ""
-                      },
-                      "enable": "False",
-                      "http": {
-                        "data": "",
-                        "url": ""
-                      },
-                      "msteams": {
-                        "msteams_instance": ""
-                      },
-                      "on_failure": [],
-                      "on_start": [],
-                      "on_success": [],
-                      "on_wait": [],
-                      "slack": {
-                        "channel": ""
-                      }
-                    },
-                    "source": {
-                      "directives": [
-                        {
-                          "details": {
-                            "args": {},
-                            "instance_name": "Jira Server",
-                            "on_error": "Continue Processing Directives"
-                          },
-                          "type": "jira_workitem_lookup",
-                          "when": "always"
-                        },
-                        {
-                          "details": {
-                            "definition": "(a) Create package revision",
-                            "evaluate": "\"master\" in branch",
-                            "group": "[$ branch $]",
-                            "includeChanges": "",
-                            "project": "Release Demo"
-                          },
-                          "evaluate": "\"master\" in branch",
-                          "type": "assign_to_pipeline",
-                          "when": "evaluate"
-                        }
-                      ],
-                      "enable_polling": "False",
-                      "group_source": "branch",
-                      "interface": "webhook",
-                      "notify_unmanaged": "False",
-                      "notify_unmanaged_addl": "",
-                      "repo_name": "",
-                      "repo_server": "",
-                      "type": "github",
-                      "webhook_secret": ""
-                    },
-                    "team": "Default",
-                    "type": "Source"
-                  }
-                ]
-              }
-            import_pipelines: false
-            import_packages: false
-            import_tasks: false
-            human_readable: true
-          - name: Configure WebHook in GitHub
+        - name: Merge code
+          type: github.MergePullRequest
+          server: GitHub
+          repositoryName: "${gitRepository}"
+          commitMessage: "Developed feature ${myFeature}"
+          variableMapping:
+            pythonScript.pullRequestNumber: "${pullRequestNumber}"
+        - name: Build code merged
+          type: xlrelease.ScriptTask
+          script: |-
+            import random
+
+            releaseVariables["mergeBuildNumber"] = "#{}".format(random.randint(1, 99999))
+        - name: Prepare code to deliver
+          type: continuum.PromoteAPackage
+          continuumServer: Delivery Insights Service
+          package: "${application}"
+          phase_name: Ready to deliver
+          new_version: "${mergeBuildNumber}"
+        - name: Check your Progression Board dashboard
+          type: xlrelease.Task
+          description: Your code now it's on the last stage
+      - name: ❌ Tests failed
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables[\"tests\"] == False"
+        tasks:
+        - name: Create a new release
+          type: xlrelease.Task
+          description: "Since tests are failing, we recommend to start a new release\
+            \ setting up a new feature branch to correct the defects"
+      color: '#CC4A3C'
+    - phase: Deliver
+      tasks:
+      - name: Let's deliver code
+        type: xlrelease.SequentialGroup
+        description: "releaseVariables[\"tests\"] == True"
+        tasks:
+        - name: Deliver code
+          type: continuum.DeliverRevision
+          continuumServer: Delivery Insights Service
+          package: "${application}"
+        - name: Check your Progression Board dashboard
+          type: xlrelease.Task
+          description: Your code is not longer visible as it's delivered already
+      color: '#991C71'
+    variables:
+    - type: xlrelease.StringVariable
+      key: myFeature
+    - type: xlrelease.StringVariable
+      key: revision
+      showOnReleaseStart: false
+    - type: xlrelease.BooleanVariable
+      key: tests
+      showOnReleaseStart: false
+      label: All good?
+    - type: xlrelease.StringVariable
+      key: mergeBuildNumber
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: application
+    - type: xlrelease.StringVariable
+      key: gitRepository
+    - type: xlrelease.IntegerVariable
+      key: pullRequestNumber
+      requiresValue: false
+      showOnReleaseStart: false
+    scriptUsername: admin
+    scriptUserPassword: admin
+
+  - template: Feature branches with CI
+    description: |-
+      This release will be the flow for using feature branches that are tested then merged with the mainline branch (release candidate) and then delivered after Regression testing.
+      This template expects the following variables:
+      - `branch`: the feature branch
+      - `repo`: name of the repository
+      - `releaseVersion`: the release version
+      - `application`: application name
+      -  `mainORmaster`: the main branch where the code is going to be merged
+
+      It also expects a progression board with an application with the following phases:
+      - `Developing`
+      - `Testing`
+      - `Ready for Release`
+      - `Regression`
+      - `Release`
+    phases:
+    - phase: Development
+      tasks:
+      - name: Devs write code!
+        type: xlrelease.Task
+        description: Devs include a story number in the Branch name as well as each
+          commit message.
+        owner: admin
+      - name: Track commits from new branch.
+        type: continuum.TrackCode
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        group: "${branch}"
+        phase: Developing
+        description: |-
+          This step could be triggered by a git trigger. This represents new code being pushed to a feature branch.
+
+          For the purposes of this release template, we will assume that each branch is only one commit and move on to testing.
+
+          In a normal work flow, we would stop the release here and have a separate release to promote the card to "testing" when it was ready.
+        variableMapping:
+          pythonScript.revision: "${revision}"
+      - name: A Pull Request is made.
+        server: GitHub
+        type: github.CreatePullRequest
+        repositoryName: "${repo}"
+        ^title: "${branch}"
+        base: "${mainORmaster}"
+        head: "${branch}"
+        body: "${branch}"
+        description: The work is said to be done and is ready for testing.
+        owner: admin
+        variableMapping:
+          pythonScript.pullRequestNumber: "${PRnumber}"
+    - phase: Testing
+      tasks:
+      - name: Move to "Testing"
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Testing
+        description: |-
+          This step moves the card to "Testing".
+
+          In a normal workflow, this could be triggered by something like a PR.
+      - name: Test your code
+        type: xlrelease.UserInputTask
+        description: This manual step represents the completion of whatever process
+          you use to test a feature branch before merging it into the mainline branch.
+        owner: admin
+        variables:
+        - TestsGreen
+      - name: Tests Passed!
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables['TestsGreen'] == True"
+        tasks:
+        - name: Merge Pull Request
+          type: github.MergePullRequest
+          server: GitHub
+          repositoryName: "${repo}"
+          commitMessage: "Merge ${branch}"
+          owner: admin
+          variableMapping:
+            pythonScript.pullRequestNumber: "${PRnumber}"
+      - name: Tests Failed
+        type: xlrelease.SequentialGroup
+        precondition: "releaseVariables['TestsGreen'] == False"
+        tasks:
+        - name: Do more work! Start new release
+          type: xlrelease.Task
+      color: '#498500'
+    - phase: Waiting for Release
+      tasks:
+      - name: Move to "Ready for Release"
+        type: continuum.PromoteAPackage
+        continuumServer: Delivery Insights Service
+        package: "${application}"
+        phase_name: Ready for Release
+        new_version: "${releaseVersion}"
+        description: "After testing and merging the feature branch, we want to not only\
+          \ promote the new card but also reversion the card to match the current Release\
+          \ Candidate's version. This is so that the cards will merge and collect all\
+          \ the work that has been done in this version."
+      - name: The Release Candidate sits and collects Cards.
+        type: xlrelease.Task
+        description: "As feature branches are reversioned and promoted, they merge,\
+          \ becoming one card."
+        owner: admin
+      color: '#FFAB00'
+    - phase: Final testing
+      tasks:
+      - name: Move to "Regression"
+        continuumServer: Delivery Insights Service
+        type: continuum.PromoteAPackage
+        package: "${application}"
+        phase_name: Regression
+        description: "After testing and merging the feature branch, we want to not only\
+          \ promote the new card but also reversion the card to match the current Release\
+          \ Candidate's version. This is so that the cards will merge and collect all\
+          \ the work that has been done in this version."
+      - name: Finish regression testIng
+        type: xlrelease.Task
+        description: This manual step represents the completion of whatever process
+          you use to test a Release Candidate before publishing.
+        owner: admin
+      color: '#CC4A3C'
+    - phase: Delivery
+      tasks:
+      - name: Move to "Release"
+        continuumServer: Delivery Insights Service
+        type: continuum.PromoteAPackage
+        package: "${application}"
+        phase_name: Release
+        description: "Once you are ready to deliver, this moves the card to \"Release\"\
+          \ for any last-minute tasks before you go live."
+      - name: Finish pre/post Release tasks.
+        type: xlrelease.Task
+        owner: admin
+      - name: Remove card from board
+        continuumServer: Delivery Insights Service
+        type: continuum.DeliverRevision
+        package: "${application}"
+        description: "Once all of the work is done and everything is live, we remove\
+          \ the card so that we are no longer tracking the work it contains."
+      color: '#991C71'
+    variables:
+    - type: xlrelease.StringVariable
+      key: revision
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: branch
+    - type: xlrelease.StringVariable
+      key: repo
+    - type: xlrelease.BooleanVariable
+      key: TestsGreen
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: releaseVersion
+    - type: xlrelease.IntegerVariable
+      key: PRnumber
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: application
+    - type: xlrelease.StringVariable
+      key: mainORmaster
+    riskProfile: Default risk profile
+    scriptUsername: admin
+    scriptUserPassword: admin
+
+  - template: Mainline branch with nightly build
+    description: |-
+      Example of a release process using only one branch, often the main or master branch. This template expects the following variables:
+      - `initialPhase`: name of the initial phase where workitems are gathered after build and code track
+      - `application`: name of the application created in the Package Progression dashboard
+      - `nextPhase`: name of the next phase to which card will be promoted
+    phases:
+      - phase: Build and track
+        tasks:
+          - name: Build
+            type: xlrelease.ScriptTask
+            description: Simulation of a build process.
+            script: "releaseVariables[\"buildNumber\"] = \"1.0\""
+          - name: Track new code commits
+            type: continuum.TrackCode
+            continuumServer: Delivery Insights Service
+            package: "${application}"
+            group: master
+            phase: "${initialPhase}"
+            version: "${buildNumber}"
+            description: Add workitems to the board
+            variableMapping:
+              pythonScript.revision: "${revision}"
+          - name: "Verify work is on ${initialPhase}"
             type: xlrelease.Task
-            description: |-
-              Go to GitHub and configure a webhook on your project to point to:
-
-              `http://demo.v1testdrive.com/api/submit_change?toproject=${projectName}&token=<api-token>`
-          - name: Configure Package for your project
-            type: continuum.ImportCatalog
-            continuumServer: Continuum
-            content: |-
-              {
-                "packages": [
-                  {
-                    "actions": [],
-                    "artifacts": [],
-                    "description": "",
-                    "globals": {},
-                    "name": "${projectName}",
-                    "progression": {
-                      "name": "${progression}",
-                      "phases": [
-                        {
-                          "autopromote": "True",
-                          "delivery_category": "Developing",
-                          "directives": [
-                            {
-                              "category": "None",
-                              "controls": [],
-                              "data_prompts": [],
-                              "defer_until": "",
-                              "description": "",
-                              "details": {
-                                "assignto": [],
-                                "notification_body": "",
-                                "reason_required": "False",
-                                "tags": [],
-                                "text": "Please confirm that the QA build was successful.",
-                                "title": "QA build successful"
-                              },
-                              "estimated_touch_time": "",
-                              "index": "0",
-                              "interactive": "True",
-                              "is_deferred": "False",
-                              "name": "QA build successful",
-                              "type": "manual_activity"
-                            }
-                          ],
-                          "name": "Master integration"
-                        },
-                        {
-                          "autopromote": "True",
-                          "delivery_category": "Packaged",
-                          "directives": [
-                            {
-                              "category": "None",
-                              "controls": [],
-                              "data_prompts": [],
-                              "defer_until": "",
-                              "description": "",
-                              "details": {
-                                "assignto": [],
-                                "notification_body": "",
-                                "reason_required": "False",
-                                "tags": [],
-                                "text": "Please confirm we can start the GA release",
-                                "title": "QA successful - ready for GA"
-                              },
-                              "estimated_touch_time": "",
-                              "index": "0",
-                              "interactive": "True",
-                              "is_deferred": "False",
-                              "name": "QA successful",
-                              "type": "manual_activity"
-                            }
-                          ],
-                          "name": "QA"
-                        },
-                        {
-                          "autopromote": "True",
-                          "delivery_category": "Packaged",
-                          "directives": [
-                            {
-                              "category": "None",
-                              "controls": [],
-                              "data_prompts": [],
-                              "defer_until": "",
-                              "description": "",
-                              "details": {
-                                "assignto": [],
-                                "notification_body": "",
-                                "reason_required": "False",
-                                "tags": [],
-                                "text": "Please confirm that all tasks on the Release for \"Post Release Activities completed\" template have been done.",
-                                "title": "Post Release Activities completed"
-                              },
-                              "estimated_touch_time": "",
-                              "index": "0",
-                              "interactive": "True",
-                              "is_deferred": "False",
-                              "name": "Post Release Activities completed",
-                              "type": "manual_activity"
-                            },
-                            {
-                              "category": "None",
-                              "controls": [],
-                              "data_prompts": [],
-                              "defer_until": "",
-                              "description": "",
-                              "details": {
-                                "definition": "Deliver Package Revision",
-                                "group": "",
-                                "initial_data": {},
-                                "project": ""
-                              },
-                              "estimated_touch_time": "",
-                              "index": "1",
-                              "interactive": "False",
-                              "is_deferred": "False",
-                              "name": "Deliver package revision",
-                              "type": "initiate_pipeline"
-                            }
-                          ],
-                          "name": "GA"
-                        }
-                      ]
-                    },
-                    "team": "Default"
-                  }
-                ]
-              }
-            overwrite: true
-            import_projects: false
-            import_pipelines: false
-            import_tasks: false
-            human_readable: true
-          - name: OK?
-            type: xlrelease.GateTask
-
-  - template: Release sample with Continuum Integration
+            description: "Go to folder dashboards / Package progression.\nA card with your\
+          \ commits should be in phase ${initialPhase}."
+      - phase: "Promote to ${nextPhase}"
+        tasks:
+          - name: Set up next phase
+            type: xlrelease.UserInputTask
+            description: Please enter the required information below.
+            variables:
+              - nextPhase
+          - name: Promote to next phase
+            type: continuum.PromoteAPackage
+            continuumServer: Delivery Insights Service
+            package: "${application}"
+            phase_name: "${nextPhase}"
+            description: "Promote card with your commits to the next phase, moving from\
+          \ left to right."
+          - name: "Verify work is on ${nextPhase}"
+            type: xlrelease.Task
+            description: "Go to folder dashboards / Package progression\nA card with your\
+          \ commits should be in phase ${nextPhase}"
+        color: '#498500'
+      - phase: Issues found
+        tasks:
+          - name: Issues Found?
+            type: xlrelease.UserInputTask
+            description: Please enter the required information below.
+            variables:
+              - hasIssues
+          - name: Build and track after issues fixed
+            type: xlrelease.SequentialGroup
+            description: Issues were found during the release process?
+            precondition: "releaseVariables['hasIssues'] == True"
+            tasks:
+              - name: Build
+                type: xlrelease.ScriptTask
+                description: Simulation of a build process
+                script: "releaseVariables[\"buildNumber\"] = \"1.0\""
+              - name: Track new code commits
+                type: continuum.TrackCode
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                group: master
+                phase: "${initialPhase}"
+                version: "${buildNumber}"
+                description: Add workitems to the board
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: "Verify work is on ${initialPhase}"
+                type: xlrelease.Task
+                description: "Go to folder dashboards / Package progression.\nA card with\
+            \ your commits should be in phase ${initialPhase}."
+              - name: "Promote to ${nextPhase}"
+                type: continuum.PromoteAPackage
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                phase_name: "${nextPhase}"
+              - name: "Verify work is on ${nextPhase}"
+                type: xlrelease.Task
+                description: "Go to folder dashboards / Package progression.\nA card with\
+            \ your commits should be in phase ${nextPhase}."
+        color: '#CC4A3C'
+      - phase: Remove revision
+        tasks:
+          - name: Delivery revision
+            type: continuum.DeliverRevision
+            continuumServer: Delivery Insights Service
+            package: "${application}"
+            description: Remove card from the board.
+          - name: Verify work is gone
+            type: xlrelease.Task
+            description: "Go to: folder dashboards / Package progression.\nThe card should\
+          \ not be on the board anymore."
+        color: '#991C71'
     variables:
-      - type: xlrelease.StringVariable
-        key: project
-        label: Project name
-        description: The project this release works on
-        value: (a) Digital.ai Release
-      - type: xlrelease.StringVariable
-        key: package
-        label: Package
-        description: The package being produced
-        value: (a) Digital.ai Release
-      - type: xlrelease.StringVariable
-        key: version
-        label: Version
-        description: Base version of this build
-        value: 10.0.0
       - type: xlrelease.StringVariable
         key: buildNumber
         requiresValue: false
         showOnReleaseStart: false
-        value: "00"
+      - type: xlrelease.StringVariable
+        key: revision
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: initialPhase
+      - type: xlrelease.StringVariable
+        key: application
+      - type: xlrelease.StringVariable
+        key: nextPhase
+      - type: xlrelease.BooleanVariable
+        key: hasIssues
+        showOnReleaseStart: false
+        label: Issues found?
+        description: Has any issue been found during the release process?
+    riskProfile: Default risk profile
+
+  - template: Release branches with nightly build
+    description: |-
+      Example of a release process using release branches with nightly build. This template expects the following variables:
+      - `mainlineBranch`: name of the mainline branch (long lived branch)
+      - `application`: name of the application created in the Package Progression dashboard.
+      - `releaseVersion`: version of the release from which release branch will be created (if it does not exist already)
+      - `gitRepository`: Github repository name in which our branches will be created
+
+      It also expects a progression board with an application with the following phases:
+      - `Development`
+      - `Integration`
+      - `Ready to deliver`
+    phases:
+      - phase: Mainline or release?
+        tasks:
+          - name: Mainline or release work?
+            type: xlrelease.UserInputTask
+            description: Is worked based on mainline or release branch?
+            variables:
+              - isMainlineWork
+        color: '#FFAB00'
+      - phase: Build and track
+        tasks:
+          - name: "Build ${mainlineBranch} branch"
+            type: xlrelease.SequentialGroup
+            description: "Build and track code from ${mainlineBranch}"
+            precondition: "releaseVariables[\"isMainlineWork\"] == True"
+            tasks:
+              - name: Build branch
+                type: xlrelease.ScriptTask
+                description: Simulate build process
+                script: "import random\n\nreleaseVariables[\"buildNumber\"] = \"#{}\".format(random.randint(1,\
+            \ 99999))"
+              - name: "Track code from ${mainlineBranch} branch"
+                type: continuum.TrackCode
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                group: "${mainlineBranch}"
+                phase: "${devPhase}"
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: See how a new card with your code has appeared on the first phase
+                  of the Progression Board.
+          - name: "Build ${releaseVersion} branch"
+            type: xlrelease.SequentialGroup
+            description: "Tasks which will execute if work is merged to the ${releaseVersion}\
+          \ branch."
+            precondition: "releaseVariables[\"isMainlineWork\"] == False"
+            tasks:
+              - name: Build branch
+                type: xlrelease.ScriptTask
+                description: Simulate branch build process
+                script: "import random\n\nreleaseVariables[\"buildNumber\"] = \"#{}\".format(random.randint(1,\
+            \ 99999))"
+              - name: "Track code from ${releaseVersion} branch"
+                type: continuum.TrackCode
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                group: "${releaseVersion}"
+                phase: "${devPhase}"
+                variableMapping:
+                  pythonScript.revision: "${revision}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: See how a new card with your code has appeared on the first phase
+                  of the Progression Board.
+        color: '#0079BC'
+      - phase: Release\/promote
+        tasks:
+          - name: "Create ${releaseVersion} branch and promote"
+            type: xlrelease.SequentialGroup
+            description: Create release branch from mainline branch. Applicable only if
+              work has been merged to mainline branch.
+            precondition: "releaseVariables[\"isMainlineWork\"] == True"
+            tasks:
+              - name: "Create ${releaseVersion} branch"
+                type: github.CreateBranch
+                server: GitHub
+                repositoryName: "${gitRepository}"
+                oldBranch: "${mainlineBranch}"
+                newBranch: "${releaseVersion}"
+          - name: Promote to next phase
+            type: continuum.PromoteAPackage
+            continuumServer: Delivery Insights Service
+            package: "${application}"
+            phase_name: "${integrationPhase}"
+            new_version: "${releaseVersion}"
+            description: "Promote card to ${integrationPhase}"
+          - name: Check your Progression Board dashboard
+            type: xlrelease.Task
+            description: "Your code is now promoted to ${integrationPhase}"
+        color: '#498500'
+      - phase: QA testing phase
+        tasks:
+          - name: Are all tests passing?
+            type: xlrelease.UserInputTask
+            description: Check this checkbox if all tests are passing and you are ready
+              to promote this card to the final phase
+            variables:
+              - isEveryTestPassing
+          - name: ✅ All tests passing
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == True"
+            tasks:
+              - name: Promote to next phase
+                type: continuum.PromoteAPackage
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                phase_name: "${deliveryPhase}"
+                description: "Promote card to ${deliveryPhase}"
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: Your code is now promoted to the last phase
+          - name: ❌ Tests failed
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == False"
+            tasks:
+              - name: Create a new release
+                type: xlrelease.Task
+                description: "Since tests are failing, we recommend fixing issues and setting\
+            \ up a new release."
+        color: '#CC4A3C'
+      - phase: Deliver
+        tasks:
+          - name: Let's deliver code
+            type: xlrelease.SequentialGroup
+            precondition: "releaseVariables[\"isEveryTestPassing\"] == True"
+            tasks:
+              - name: Deliver code
+                type: continuum.DeliverRevision
+                continuumServer: Delivery Insights Service
+                package: "${application}"
+                description: Code will be delivered and removed from the Progression Board
+              - name: Check your Progression Board dashboard
+                type: xlrelease.Task
+                description: Your code is not longer visible as it's delivered already
+        color: '#991C71'
+    variables:
+      - type: xlrelease.StringVariable
+        key: mainlineBranch
+        label: Mainline branch
+        description: Name of the mainline branch
+      - type: xlrelease.StringVariable
+        key: application
+        label: Application name
+      - type: xlrelease.StringVariable
+        key: releaseVersion
+        label: Release version
+      - type: xlrelease.StringVariable
+        key: revision
+        requiresValue: false
+        showOnReleaseStart: false
+      - type: xlrelease.StringVariable
+        key: gitRepository
+        label: Git repository
+      - type: xlrelease.BooleanVariable
+        key: isEveryTestPassing
+        showOnReleaseStart: false
+        label: All good?
+      - type: xlrelease.BooleanVariable
+        key: isMainlineWork
+        showOnReleaseStart: false
+        label: Mainline work?
+        description: Is code merged to the mainline branch?
+        value: true
+      - type: xlrelease.StringVariable
+        key: devPhase
+        showOnReleaseStart: false
+        label: Dev phase
+        description: Development phase
+        value: Development
+      - type: xlrelease.StringVariable
+        key: integrationPhase
+        showOnReleaseStart: false
+        label: Integration phase
+        description: Integration phase
+        value: Integration
+      - type: xlrelease.StringVariable
+        key: deliveryPhase
+        showOnReleaseStart: false
+        label: Delivery phase
+        description: Ready to deliver phase
+        value: Ready to deliver
     scriptUsername: admin
     scriptUserPassword: admin
+    riskProfile: Default risk profile
 
-    phases:
-      - phase: Continuum
-        tasks:
-
-        - name: Jenkins Build
-          type: jenkins.Build
-          taskFailureHandlerEnabled: true
-          taskRecoverOp: SKIP_TASK
-          buildNumber: ${buildNumber}
-
-        - name: Create and promote package revision
-          type: continuum.RunAPipeline
-          continuumServer: Continuum
-          definition: (a) Create package revision
-          project: ${project}
-          group: master
-          details:
-            package_name: ${package}
-            version: ${version}
-            full_version: ${version}-b${buildNumber}
-          instance_name: Promote package for ${package} build ${buildNumber}
-
-        - name: Configure package manifest
-          type: continuum.ProvidePackageManifestData
-          continuumServer: Continuum
-          package: (a) Digital.ai Release
-          version: "5.0"
-          revision_from: 62
-          revision_to: 146
-
-        - name: OK?
-          type: xlrelease.GateTask
-
-  - name: Package progression
+  - name: Delivery Insigths
     type: continuum.PackageProgressionDashboard
     owner: admin
     tiles:
-      - name: Package progression
+      - name: Progression board
         type: continuum.PackageProgressionTile
-        server: Continuum
-        progression: (a) Default Package Progression
+        server: Delivery Insights Service
         row: 0
         col: 0

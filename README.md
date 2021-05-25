@@ -1,7 +1,7 @@
 # release-delivery-insights-examples
 
 * The Digital.ai Release with Delivery Insights brings together Agile and DevOps to help you improve visibility and collaboration across software development and deliveries by seamlessly connecting the data and artifacts at each stage of the release to the related agile stories and features, allowing the whole organization to use a single tool to easily track progress end-to-end.
-* Digital.ai Release version 10.0 supports integration with Continuum 21.0. 
+* Digital.ai Release version 10.1.0+ and 10.0.3+ supports integration with Continuum 21.1.0
 * Digital.ai Release is our Release orchestrator and is more focused on the workflow – less on the contents of the flow, but more of the process. 
 * Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development Value Stream. 
 * The idea is to bring (integrate) them together, so that Release provides a rich insight in what is flowing through your development Value Stream. This combo of Release and Continuum is being offered as the Release with DevOps Insights solution. 
@@ -11,23 +11,12 @@ Here are a few Digital.ai Release templates that are readily available to simpli
 
 ## Templates included:
 
-* Continuum Server Configuration:
-
-    This activity needs to be run only once. It is fine to have it as a one-off release. 
-    The tasks are configured with raw JSON content that is pumped into Continuum using the ‘import’ mechanism.
-
-* Continuum project configuration:
-
-    In the scope of this demo, a project is one GitHub repository, using JIRA as a source control mechanism that produces a single package .
-    Each project needs to be configured separately. 
-    We need to set this up in Continuum so it starts tracking commits, associates them with JIRA work items and is able to produce a package version when a build succeeds. 
-
-    Project setup needs to run once so it also makes sense to model it as a user-run template in Release.
-
-* Release sample with Continuum Integration
-
-    After a successful build, Release does a callback to Continuum to tell it to bundle the collected commits into a package manifest.
-    
+There are 4 templates included `Delivery Insights` folder:
+- `Track code and promote`: Simple template that shows all the new tasks available to use.
+- `Feature branches with CD`: Example of a release process using feature branches with continuous delivery.
+- `Feature branches with CI`: Example of a release process using feature branches that are tested then merged with the mainline branch (release candidate) and then delivered after Regression testing.
+- `Mainline branch with nightly build`: Example of a release process using only one branch, often the main or master branch
+- `Release branches with nightly build`: Example of a release process using release branches with nightly build.
 
 ## Prerequisites
 
@@ -42,7 +31,7 @@ You may need to start the VPN client (Cisco AnyConnect) to be able to download t
 
 ### Continuum
 
-A Continuum server
+A Continuum server v21.1.0 with `Delivery Insights` configuration enabled.
 
 ### Licenses
 
@@ -51,6 +40,12 @@ You need to bring your own Release license and copy it to the following location
 * `docker/xl-release/default-conf/xl-release-license.lic`
 
 License files are in `.gitignore` to prevent them from being committed.
+
+### Known limitations
+
+- The Github connection on Release must use `token` instead of combination of username and password.
+- The Jira connection must use `token` and not `password` field.
+- Agility connection must use `token` and not basic authorization.
 
 ## Setup
 ### Configure passwords
@@ -62,9 +57,8 @@ Create a file `~/.xebialabs/secrets.xlvals`, paste in the following section and 
     
     jira_url = https://yourcompany.atlassian.net/
     jira_user = your_jira_user
-    jira_password = your_jira_password
+    jira_token = your_jira_token
     
-    github_user: your_github_user
     github_token: your_github_token
     
     continuum_url: http://yourcompany.v1testdrive.com
