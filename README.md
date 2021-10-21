@@ -1,7 +1,7 @@
 # release-delivery-insights-examples
 
 * The Digital.ai Release with Delivery Insights brings together Agile and DevOps to help you improve visibility and collaboration across software development and deliveries by seamlessly connecting the data and artifacts at each stage of the release to the related agile stories and features, allowing the whole organization to use a single tool to easily track progress end-to-end.
-* Digital.ai Release version 10.1.0+ and 10.0.3+ supports integration with Continuum 21.1.0
+* Digital.ai Release version 10.3 supports integration with Continuum 21.2.1
 * Digital.ai Release is our Release orchestrator and is more focused on the workflow – less on the contents of the flow, but more of the process. 
 * Continuum continuously tracks the content: work items, commits, packages, versions and where they are in the development Value Stream. 
 * The idea is to bring (integrate) them together, so that Release provides a rich insight in what is flowing through your development Value Stream. This combo of Release and Continuum is being offered as the Release with DevOps Insights solution. 
@@ -31,7 +31,7 @@ You may need to start the VPN client (Cisco AnyConnect) to be able to download t
 
 ### Continuum
 
-A Continuum server v21.1.0 with `Delivery Insights` configuration enabled.
+A Continuum server v21.2.1 with `Delivery Insights` configuration enabled.
 
 ### Licenses
 
